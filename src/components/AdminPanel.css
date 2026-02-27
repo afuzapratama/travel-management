@@ -1,0 +1,249 @@
+/* ============================================
+   ADMIN PANEL DASHBOARD STYLES
+   ============================================ */
+
+/* Stats Cards */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #DFE6E9;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 4px solid #DFE6E9;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.stat-card.pending { border-left-color: #FDCB6E; }
+.stat-card.confirmed { border-left-color: #2E86AB; }
+.stat-card.completed { border-left-color: #00B894; }
+.stat-card.total { border-left-color: #1B3A5C; }
+
+.stat-num {
+  font-family: 'Poppins', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1B3A5C;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #636E72;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Admin Content */
+.admin-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 28px 60px;
+}
+
+/* Admin Table */
+.admin-table-wrap {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #DFE6E9;
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.admin-table thead th {
+  background: #F8FAFE;
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #636E72;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #DFE6E9;
+}
+
+.admin-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F0F3F7;
+  color: #2D3436;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr.clickable-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.admin-table tbody tr.clickable-row:hover {
+  background: #F8FAFE;
+}
+
+.route-tag-sm {
+  background: #1B3A5C;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Row Actions */
+.row-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.act-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #DFE6E9;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.act-btn.view { color: #2E86AB; }
+.act-btn.view:hover { background: #E8F4F8; border-color: #2E86AB; }
+
+.act-btn.del { color: #B2BEC3; }
+.act-btn.del:hover { background: #FFE5E5; border-color: #D63031; color: #D63031; }
+
+/* Info Bar */
+.admin-info-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 28px 8px;
+  font-size: 12px;
+  color: #636E72;
+  font-weight: 500;
+}
+
+/* Pagination */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px 0 4px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin-pagination .pg-btn {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #E8ECF0;
+  border-radius: 8px;
+  background: #fff;
+  color: #636E72;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.admin-pagination .pg-btn:hover:not(:disabled) {
+  border-color: #2E86AB;
+  color: #2E86AB;
+  background: #F0F8FB;
+}
+
+.admin-pagination .pg-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin-pagination .pg-btn.pg-active {
+  background: #1B3A5C;
+  border-color: #1B3A5C;
+  color: #fff;
+}
+
+.admin-pagination .pg-dots {
+  padding: 0 4px;
+  color: #B2BEC3;
+  font-size: 13px;
+  user-select: none;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .admin-stats {
+    display: flex;
+    gap: 6px;
+    padding: 10px 12px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .admin-stats::-webkit-scrollbar { display: none; }
+
+  .stat-card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left-width: 3px;
+  }
+
+  .stat-num {
+    font-size: 16px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+
+  .admin-content {
+    padding-bottom: 90px;
+  }
+  .admin-table {
+    font-size: 12px;
+  }
+  .admin-table thead th {
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+  .admin-table tbody td {
+    padding: 10px 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-content {
+    padding: 12px 8px 100px;
+  }
+}

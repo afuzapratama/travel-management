@@ -1,0 +1,817 @@
+/* ============================================
+   ADMIN INVOICE VIEW — Overrides & New Styles
+   ============================================ */
+
+/* Container */
+.aiv-container {
+  min-height: 100vh;
+  background: #F0F2F5;
+}
+
+/* ===== ACTION BAR ===== */
+.aiv-actionbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #DFE6E9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.aiv-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid #DFE6E9;
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #636E72;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aiv-back:hover {
+  border-color: #1B3A5C;
+  color: #1B3A5C;
+  background: #F8F9FA;
+}
+
+.aiv-actions-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== CUSTOM STATUS SELECT ===== */
+.custom-status-select {
+  position: relative;
+}
+
+.css-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid #DFE6E9;
+  border-radius: 8px;
+  background: #F8F9FA;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1B3A5C;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.css-trigger:hover {
+  border-color: #2E86AB;
+  background: #fff;
+}
+
+.css-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.css-arrow {
+  font-size: 10px;
+  color: #636E72;
+  margin-left: 2px;
+}
+
+.css-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: #fff;
+  border: 1px solid #DFE6E9;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 4px;
+  min-width: 180px;
+  animation: dropIn 0.15s ease-out;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.css-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 7px;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2D3436;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.css-option:hover {
+  background: #F0F2F5;
+}
+
+.css-option.active {
+  background: #E8F4FD;
+  color: #1B3A5C;
+}
+
+.aiv-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aiv-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.aiv-btn.secondary {
+  background: #F0F2F5;
+  color: #636E72;
+  border: 1px solid #DFE6E9;
+}
+
+.aiv-btn.secondary:hover {
+  background: #E8EAED;
+  color: #1B3A5C;
+}
+
+.aiv-btn.primary {
+  background: linear-gradient(135deg, #D63031, #E84393);
+  color: #fff;
+}
+
+.aiv-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.aiv-btn.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.aiv-btn.warning {
+  background: linear-gradient(135deg, #FDCB6E, #F39C12);
+  color: #2D3436;
+}
+
+.aiv-btn.warning:hover {
+  opacity: 0.9;
+}
+
+/* ===== TOGGLE BUTTONS ===== */
+.aiv-btn.toggle {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #DFE6E9;
+  transition: all 0.2s;
+}
+
+.aiv-btn.toggle-on {
+  background: #DFF9FB;
+  color: #2E86AB;
+  border-color: #2E86AB;
+}
+
+.aiv-btn.toggle-on:hover {
+  background: #C7ECEE;
+}
+
+.aiv-btn.toggle-off {
+  background: #F0F2F5;
+  color: #B2BEC3;
+  border-color: #DFE6E9;
+}
+
+.aiv-btn.toggle-off:hover {
+  background: #E8EAED;
+  color: #636E72;
+}
+
+.aiv-separator {
+  width: 1px;
+  height: 24px;
+  background: #DFE6E9;
+  margin: 0 4px;
+}
+
+/* ===== INVOICE PREVIEW AREA ===== */
+.aiv-preview-area {
+  padding: 30px 20px;
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - 60px);
+}
+
+.aiv-preview-area .invoice-page {
+  width: 210mm;
+  max-width: 100%;
+}
+
+/* ===== EDITABLE FIELD STYLES ===== */
+.ef {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  padding: 1px 3px;
+  border-radius: 2px;
+  transition: all 0.15s;
+  min-width: 30px;
+  display: inline-block;
+}
+
+.ef:hover {
+  border-bottom-color: #2E86AB;
+  background: rgba(46, 134, 171, 0.06);
+}
+
+.ef.empty {
+  color: #B2BEC3;
+  font-style: italic;
+}
+
+.ef.empty:hover {
+  color: #2E86AB;
+}
+
+.ef-currency {
+  font-variant-numeric: tabular-nums;
+}
+
+.ei {
+  border: 1px solid #2E86AB;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(46, 134, 171, 0.12);
+  min-width: 40px;
+}
+
+.ei:focus {
+  border-color: #1B3A5C;
+  box-shadow: 0 0 0 3px rgba(27, 58, 92, 0.15);
+}
+
+.ei-currency {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Date inputs */
+.ef input[type="date"],
+.ei[type="date"] {
+  width: auto;
+  min-width: 130px;
+}
+
+/* Invoice number edit */
+.inv-num-edit {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Status note edit */
+.status-note-edit {
+  font-size: 10px;
+}
+
+/* Route edit */
+.route-edit {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ===== SELECT DROPDOWN ===== */
+.ef-select {
+  cursor: pointer;
+  position: relative;
+}
+
+.ef-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #DFE6E9;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  padding: 4px;
+  min-width: 150px;
+}
+
+.ef-opt {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ef-opt:hover {
+  background: #F0F2F5;
+}
+
+.ef-opt.active {
+  background: #E8F4FD;
+  color: #1B3A5C;
+}
+
+/* ===== FLIGHT INFO BAR ===== */
+.flight-info-bar {
+  display: flex;
+  margin: 0 40px 18px;
+  border: 1.5px solid #2E86AB;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(46,134,171,0.04), rgba(27,58,92,0.04));
+}
+
+.fi-item {
+  flex: 1;
+  padding: 10px 14px;
+  text-align: center;
+  border-right: 1px solid rgba(46,134,171,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fi-item:last-child {
+  border-right: none;
+}
+
+.fi-label {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #2E86AB;
+}
+
+.fi-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1B3A5C;
+  line-height: 1.3;
+}
+
+.fi-pax {
+  font-size: 20px;
+  color: #2E86AB;
+}
+
+/* ===== NEW 4-COLUMN TABLE OVERRIDES ===== */
+.ticket-table.new-layout .col-no {
+  width: 6%;
+  text-align: center;
+}
+
+.ticket-table.new-layout .col-name {
+  width: 44%;
+}
+
+.ticket-table.new-layout .col-ref {
+  width: 22%;
+  text-align: center;
+}
+
+.ticket-table.new-layout .col-price,
+.ticket-table.new-layout .price-cell {
+  width: 28%;
+  text-align: right;
+}
+
+.ticket-table.new-layout td.col-name {
+  padding: 10px 12px;
+}
+
+.pax-name {
+  font-weight: 700;
+  font-size: 12px;
+  color: #1B3A5C;
+  margin-bottom: 3px;
+}
+
+.pax-type {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  margin-bottom: 3px;
+  background: #0984E3;
+  color: #fff;
+}
+
+.pax-sub {
+  font-size: 9px;
+  color: #636E72;
+  line-height: 1.5;
+}
+
+/* Price cell styling */
+.ticket-table.new-layout .price-cell {
+  vertical-align: middle;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1B3A5C;
+  text-align: right;
+  padding-right: 14px;
+}
+
+.ticket-table.new-layout .price-cell .ef,
+.ticket-table.new-layout .price-cell .ei {
+  text-align: right;
+}
+
+/* Booking ref column */
+.ticket-table.new-layout td.col-ref {
+  vertical-align: middle;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* ===== PDF OVERLAY ===== */
+.pdf-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.pdf-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px 40px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.pdf-box i {
+  font-size: 28px;
+  color: #2E86AB;
+  margin-bottom: 10px;
+}
+
+.pdf-box p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1B3A5C;
+}
+
+/* ===== MASKED PRICE ===== */
+.price-masked {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #B2BEC3;
+  letter-spacing: 2px;
+}
+
+/* ===== COPYABLE FIELD (agent data, read-only for admin) ===== */
+.cf {
+  position: relative;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: all 0.15s;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.cf:hover {
+  background: #DFF9FB;
+  border-bottom-color: #2E86AB;
+}
+
+.cf.cf-empty {
+  color: #B2BEC3;
+  cursor: default;
+}
+
+.cf.cf-empty:hover {
+  background: none;
+  border-bottom-color: transparent;
+}
+
+.cf-inline {
+  font-size: inherit;
+}
+
+.cf-toast {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #00B894;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: cfFadeIn 0.15s ease;
+  z-index: 10;
+}
+
+.cf-toast i {
+  margin-right: 3px;
+}
+
+@keyframes cfFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .aiv-actionbar { display: none !important; }
+  .aiv-preview-area { padding: 0; }
+  .ef { border-bottom: none !important; background: none !important; }
+  .ef:hover { border-bottom: none !important; background: none !important; }
+  .cf { border-bottom: none !important; cursor: default !important; }
+  .cf:hover { background: none !important; border-bottom-color: transparent !important; }
+  .cf-toast { display: none !important; }
+  .flight-info-bar { border-color: #ccc; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .aiv-actionbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+  .aiv-actions-right {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .aiv-btn span { display: none; }
+  .aiv-preview-area:not(.aiv-zoom-area) {
+    padding: 12px 8px;
+  }
+  /* Only apply responsive overrides to non-zoomed invoice */
+  .aiv-preview-area:not(.aiv-zoom-area) .flight-info-bar {
+    flex-wrap: wrap;
+    margin: 0 16px 12px;
+  }
+  .aiv-preview-area:not(.aiv-zoom-area) .fi-item {
+    flex: 1 1 33%;
+    border-bottom: 1px solid rgba(46,134,171,0.2);
+  }
+}
+
+/* ============================================
+   AGENT INVOICE VIEW — Agent-specific styles
+   ============================================ */
+
+/* ===== AGENT EDIT FORM ===== */
+.agent-edit-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1B3A5C;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-edit-form-wrap {
+  max-width: 860px;
+  margin: 24px auto;
+  padding: 0 20px;
+}
+
+.agent-edit-form-wrap .booking-form {
+  background: transparent;
+  padding: 0;
+}
+
+.agent-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border: 2px solid;
+  border-radius: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  background: #fff;
+}
+
+.agent-add-pax-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 40px 0;
+  padding: 6px 14px;
+  border: 1px dashed #2E86AB;
+  border-radius: 6px;
+  background: transparent;
+  color: #2E86AB;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.agent-add-pax-btn:hover {
+  background: #E8F4FD;
+}
+
+.pax-del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: #FDE8E8;
+  color: #D63031;
+  font-size: 9px;
+  cursor: pointer;
+  margin-left: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+tr:hover .pax-del-btn {
+  opacity: 1;
+}
+
+.pax-del-btn:hover {
+  background: #D63031;
+  color: #fff;
+}
+
+.pax-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: 9px;
+  color: #636E72;
+}
+
+.pax-edit-row label {
+  font-weight: 600;
+  color: #888;
+}
+
+.pax-edit-row .ef,
+.pax-edit-row .ei {
+  font-size: 9px;
+  padding: 1px 4px;
+}
+
+.agent-notes-edit {
+  margin-top: 10px;
+  border-top: 1px solid #E8ECF0;
+  padding-top: 8px;
+}
+
+.agent-notes-edit label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #636E72;
+  margin-bottom: 4px;
+}
+
+.agent-notes-edit textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px solid #DFE6E9;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.agent-notes-edit textarea:focus {
+  border-color: #2E86AB;
+}
+
+@media print {
+  .agent-add-pax-btn,
+  .pax-del-btn,
+  .pax-edit-row,
+  .agent-notes-edit {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   AGENT INVOICE — ZOOM (Mobile)
+   ============================================ */
+.aiv-zoom-area {
+  position: relative;
+  padding: 0 !important;
+  background: #E8ECF0;
+  overflow: hidden;
+}
+
+.zoom-wrapper {
+  width: 100% !important;
+  height: calc(100vh - 60px) !important;
+}
+
+.zoom-content {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.invoice-page-zoomed {
+  width: 210mm !important;
+  max-width: none !important;
+  min-width: 210mm;
+}
+
+/* Zoom control buttons */
+.invoice-zoom-controls {
+  position: fixed;
+  bottom: 24px;
+  right: 16px;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invoice-zoom-controls button {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #1B3A5C;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.invoice-zoom-controls button:hover {
+  background: #1B3A5C;
+  color: #fff;
+}
+
+.invoice-zoom-controls button:active {
+  transform: scale(0.92);
+}
+
+/* Desktop: hide zoom controls */
+@media (min-width: 901px) {
+  .invoice-zoom-controls {
+    display: none;
+  }
+}

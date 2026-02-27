@@ -1,0 +1,190 @@
+/* ============================================
+   LOADING SCREEN — Travel Panel System
+   ============================================ */
+
+/* ===== OVERLAY ===== */
+.ls-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0F1923 0%, #1B3A5C 50%, #2E86AB 100%);
+  overflow: hidden;
+}
+
+/* Subtle background particles */
+.ls-overlay::before,
+.ls-overlay::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.07;
+  background: #fff;
+  animation: lsFloat 6s ease-in-out infinite;
+}
+.ls-overlay::before {
+  width: 300px; height: 300px;
+  top: -80px; right: -80px;
+  animation-delay: 0s;
+}
+.ls-overlay::after {
+  width: 200px; height: 200px;
+  bottom: -60px; left: -60px;
+  animation-delay: -3s;
+}
+
+@keyframes lsFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+/* ===== CARD ===== */
+.ls-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 48px 56px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  animation: lsCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes lsCardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===== PLANE ANIMATION ===== */
+.ls-plane-wrap {
+  position: relative;
+  width: 120px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ls-plane {
+  font-size: 36px;
+  color: #fff;
+  animation: lsPlaneHover 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(46, 134, 171, 0.5));
+}
+
+@keyframes lsPlaneHover {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-8px) rotate(-5deg); }
+}
+
+.ls-trail {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
+  border-radius: 2px;
+  transform: translateY(-50%);
+  animation: lsTrail 2s ease-in-out infinite;
+}
+
+@keyframes lsTrail {
+  0%, 100% { opacity: 0.3; width: 40px; }
+  50% { opacity: 0.7; width: 65px; }
+}
+
+/* ===== PULSING DOTS ===== */
+.ls-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.ls-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: lsDot 1.4s ease-in-out infinite;
+}
+
+.ls-dots span:nth-child(2) { animation-delay: 0.15s; }
+.ls-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes lsDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ===== TEXT ===== */
+.ls-text {
+  text-align: center;
+}
+
+.ls-text h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+
+.ls-text p {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+}
+
+/* ===== PROGRESS BAR ===== */
+.ls-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ls-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #2E86AB, #00B894, #2E86AB);
+  background-size: 200% 100%;
+  border-radius: 4px;
+  animation: lsBarFill 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+             lsBarShimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes lsBarFill {
+  0% { width: 0%; }
+  20% { width: 25%; }
+  50% { width: 55%; }
+  80% { width: 80%; }
+  100% { width: 95%; }
+}
+
+@keyframes lsBarShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 480px) {
+  .ls-card {
+    padding: 36px 32px;
+    gap: 22px;
+    margin: 0 20px;
+  }
+  .ls-plane { font-size: 28px; }
+  .ls-text h3 { font-size: 17px; }
+  .ls-bar { width: 160px; }
+}

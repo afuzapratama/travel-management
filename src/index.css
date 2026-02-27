@@ -1,0 +1,195 @@
+/* ============================================
+   GLOBAL STYLES — Travel Panel System
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: #F0F2F5;
+  color: #2D3436;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #B2BEC3; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #636E72; }
+
+/* ===== SHARED PANEL STYLES ===== */
+.panel-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #fff;
+  border-bottom: 1px solid #DFE6E9;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+}
+
+.topbar-icon.agent { background: linear-gradient(135deg, #00B894, #00CEC9); }
+.topbar-icon.admin { background: linear-gradient(135deg, #1B3A5C, #2E86AB); }
+
+.topbar-left h2 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1B3A5C;
+}
+
+.topbar-left p {
+  font-size: 11px;
+  color: #636E72;
+  margin-top: -2px;
+}
+
+.btn-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #DFE6E9;
+  border-radius: 8px;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #636E72;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  border-color: #D63031;
+  color: #D63031;
+  background: #FFF0F0;
+}
+
+/* Tabs */
+.panel-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 2px solid #E8EAED;
+}
+
+.panel-tabs button {
+  padding: 12px 20px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #636E72;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.panel-tabs button:hover {
+  color: #1B3A5C;
+}
+
+.panel-tabs button.active {
+  color: #1B3A5C;
+  border-bottom-color: #1B3A5C;
+}
+
+.tab-badge {
+  background: #D63031;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 10px;
+  line-height: 1;
+}
+
+/* Panel content */
+.panel-content {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Success banner */
+.success-banner {
+  margin: 0 24px;
+  padding: 12px 16px;
+  background: #D5F5E3;
+  color: #00B894;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #B2BEC3;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.empty-state p {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Print styles */
+@media print {
+  .panel-topbar,
+  .panel-tabs,
+  .aiv-actionbar {
+    display: none !important;
+  }
+  body { background: #fff; }
+  .invoice-page {
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+}
