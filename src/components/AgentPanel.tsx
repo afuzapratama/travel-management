@@ -258,16 +258,6 @@ export default function AgentPanel() {
     });
   }, []);
 
-  const movePax = useCallback((idx: number, dir: -1 | 1) => {
-    setForm(p => {
-      const arr = [...p.passengers];
-      const target = idx + dir;
-      if (target < 0 || target >= arr.length) return p;
-      [arr[idx], arr[target]] = [arr[target], arr[idx]];
-      return { ...p, passengers: arr };
-    });
-  }, []);
-
   const applyQuickRoute = (fromCode: string, toCode: string) => {
     const fromAirport = getAirportByCode(fromCode);
     const toAirport = getAirportByCode(toCode);

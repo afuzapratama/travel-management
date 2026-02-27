@@ -456,16 +456,7 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
       return { ...p, passengers: p.passengers.filter(x => x.id !== id) };
     });
   }, []);
-  const moveEditPax = useCallback((idx: number, dir: -1 | 1) => {
-    setEditForm(p => {
-      if (!p) return p;
-      const arr = [...p.passengers];
-      const target = idx + dir;
-      if (target < 0 || target >= arr.length) return p;
-      [arr[idx], arr[target]] = [arr[target], arr[idx]];
-      return { ...p, passengers: arr };
-    });
-  }, []);
+
   const editApplyQuickRoute = (fromCode: string, toCode: string) => {
     const fromAirport = getAirportByCode(fromCode);
     const toAirport = getAirportByCode(toCode);

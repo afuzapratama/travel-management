@@ -5,8 +5,7 @@
 // ============================================
 
 import { supabase } from './supabase';
-import type { Booking, Passenger, BookingStatus } from '../types/booking';
-import { DEFAULT_COMPANY, DEFAULT_PAYMENT } from '../types/booking';
+import type { Booking, Passenger, BookingStatus, PaxTitle } from '../types/booking';
 
 // ==========================================
 // AUTH / ACCESS KEYS
@@ -112,7 +111,8 @@ export async function deleteKey(id: string): Promise<void> {
 // AGENT CRUD (Admin manages agents)
 // ==========================================
 
-function rowToAgent(r: Record<string, unknown>): Agent {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToAgent(r: any): Agent {
   return {
     id: r.id as string,
     name: r.name as string,
@@ -225,7 +225,8 @@ export async function updateCompanySettings(settings: { logoUrl?: string; signat
 // ==========================================
 
 /** Convert DB rows → app Booking type */
-function rowToBooking(row: Record<string, unknown>, paxRows: Record<string, unknown>[]): Booking {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToBooking(row: any, paxRows: any[]): Booking {
   return {
     id: row.id as string,
     agentId: row.agent_id as string | undefined,
@@ -243,7 +244,7 @@ function rowToBooking(row: Record<string, unknown>, paxRows: Record<string, unkn
       .sort((a, b) => (a.sort_order as number) - (b.sort_order as number))
       .map(p => ({
         id: p.id as string,
-        title: (p.title as string) || 'MR',
+        title: ((p.title as string) || 'MR') as PaxTitle,
         name: p.name as string,
         type: p.type as Passenger['type'],
         dob: p.dob as string,
@@ -284,8 +285,8 @@ function rowToBooking(row: Record<string, unknown>, paxRows: Record<string, unkn
       signerPosition: row.signer_position as string,
     },
     notes: row.notes as string,
-    hideKeterangan: (row as Record<string, unknown>).hide_keterangan === true,
-    hideHarga: (row as Record<string, unknown>).hide_harga === true,
+    hideKeterangan: row.hide_keterangan === true,
+    hideHarga: row.hide_harga === true,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

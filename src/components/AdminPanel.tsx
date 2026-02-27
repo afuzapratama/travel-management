@@ -55,7 +55,7 @@ export default function AdminPanel() {
     switch (tab) {
       case 'request': return bookings.filter(b => b.status === 'pending');
       case 'active': return bookings.filter(b => b.status === 'confirmed');
-      case 'all': return bookings;
+      case 'all': default: return bookings;
     }
   }, [bookings, tab]);
 
