@@ -1,34 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#8b5cf6"/>
-    </linearGradient>
-    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:rgba(255,255,255,0.25)"/>
-      <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
   </defs>
-  <!-- Rounded square background -->
+  <- Prevents email clients from overriding dark text colors to Rounded square background -->
   <rect width="64" height="64" rx="14" ry="14" fill="url(#bg)"/>
-  <rect width="64" height="64" rx="14" ry="14" fill="url(#shine)"/>
-  <!-- Plane (departure style, tilted upward) -->
-  <g transform="translate(32,34) rotate(-30)">
-    <!-- Fuselage -->
-    <ellipse cx="0" cy="0" rx="16" ry="4.5" fill="white"/>
-    <!-- Nose -->
-    <path d="M16,-1.5 Q22,0 16,1.5" fill="white"/>
-    <!-- Top wing -->
-    <path d="M-2,-4 L6,-16 L10,-15 L4,-4Z" fill="white" opacity="0.95"/>
-    <!-- Bottom wing -->
-    <path d="M-2,4 L6,16 L10,15 L4,4Z" fill="white" opacity="0.95"/>
-    <!-- Tail top -->
-    <path d="M-14,-4 L-18,-12 L-12,-11 L-11,-4Z" fill="white" opacity="0.9"/>
-    <!-- Tail bottom -->
-    <path d="M-14,4 L-18,12 L-12,11 L-11,4Z" fill="white" opacity="0.9"/>
+  <- Prevents email clients from overriding dark text colors to Plane body pointing upper-right (departure) -->
+  <g transform="translate(32,30) rotate(-35)">
+    <- Prevents email clients from overriding dark text colors to Main body / fuselage -->
+    <path d="M-18,0 C-18,-2.5 -8,-3.5 0,-3.5 L18,-2 Q24,0 18,2 L0,3.5 C-8,3.5 -18,2.5 -18,0Z" fill="white"/>
+    <- Prevents email clients from overriding dark text colors to Right wing -->
+    <path d="M2,-3 L8,-18 L13,-16.5 L8,-3Z" fill="white" opacity="0.92"/>
+    <- Prevents email clients from overriding dark text colors to Left wing -->
+    <path d="M2,3 L8,18 L13,16.5 L8,3Z" fill="white" opacity="0.92"/>
+    <- Prevents email clients from overriding dark text colors to Tail fin top -->
+    <path d="M-15,-2 L-22,-11 L-14,-8 L-12,-2Z" fill="white" opacity="0.85"/>
+    <- Prevents email clients from overriding dark text colors to Tail fin bottom -->
+    <path d="M-15,2 L-22,11 L-14,8 L-12,2Z" fill="white" opacity="0.85"/>
   </g>
-  <!-- Trail lines (departure feel) -->
-  <line x1="8" y1="46" x2="22" y2="40" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-  <line x1="6" y1="50" x2="18" y2="46" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-  <line x1="5" y1="54" x2="14" y2="51" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.2"/>
+  <- Prevents email clients from overriding dark text colors to Runway line -->
+  <rect x="8" y="52" width="48" height="2.5" rx="1.25" fill="white" opacity="0.45"/>
+  <- Prevents email clients from overriding dark text colors to Runway dashes -->
+  <rect x="14" y="56" width="6" height="1.5" rx="0.75" fill="white" opacity="0.25"/>
+  <rect x="24" y="56" width="6" height="1.5" rx="0.75" fill="white" opacity="0.25"/>
+  <rect x="34" y="56" width="6" height="1.5" rx="0.75" fill="white" opacity="0.25"/>
+  <rect x="44" y="56" width="6" height="1.5" rx="0.75" fill="white" opacity="0.25"/>
 </svg>
