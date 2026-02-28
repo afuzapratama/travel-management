@@ -153,13 +153,13 @@ async function seed() {
         dob,
         passport: genPassport(),
         passport_expiry: passportExpiry,
-        booking_ref: '',
-        price: type === 'ADT' ? rand(3500000, 12000000) : type === 'CHD' ? rand(2500000, 8000000) : rand(500000, 2000000),
+        e_ticket_number: `${rand(100, 999)}-${rand(1000000000, 9999999999)}`,
+        pnr: `${String.fromCharCode(65+rand(0,25))}${String.fromCharCode(65+rand(0,25))}${rand(100,999)}${String.fromCharCode(65+rand(0,25))}`,
         sort_order: p,
       });
     }
 
-    const serviceFee = pick([0, 50000, 100000, 150000, 200000]);
+    const pricePerPax = pick([3500000, 4500000, 5500000, 7000000, 8500000, 10000000, 12000000]);
     const discount = pick([0, 0, 0, 50000, 100000, 250000]);
 
     // Insert booking
@@ -184,7 +184,7 @@ async function seed() {
         po_number: poNum,
         payment_status: pick(['belum-lunas', 'lunas', 'dp']),
         payment_status_note: '',
-        service_fee: serviceFee,
+        price_per_pax: pricePerPax,
         discount: discount,
         bank_name: 'Bank Mandiri',
         account_name: 'PT Global Teknik Multi Guna',

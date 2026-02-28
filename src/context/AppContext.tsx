@@ -93,7 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      setInitialLoading(true);
+      setInitialLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
       Promise.all([refreshBookings(), refreshCompanySettings()]).finally(() => {
         setInitialLoading(false);
       });
@@ -163,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Login — validate key against Supabase
   const login = useCallback(async (key: string): Promise<{ success: boolean; error?: string }> => {
@@ -215,6 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useApp() {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error('useApp must be used within AppProvider');

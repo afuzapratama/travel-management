@@ -226,6 +226,68 @@
   margin: 0 4px;
 }
 
+/* ===== ACTIONS LEFT (Back + Note) ===== */
+.aiv-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== AGENT NOTE POPUP ===== */
+.aiv-note-wrapper {
+  position: relative;
+}
+
+.aiv-note-btn {
+  background: #FFF8E1 !important;
+  color: #F39C12 !important;
+  border: 1px solid #FDCB6E !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
+.aiv-note-btn:hover,
+.aiv-note-btn.active {
+  background: #FDEAA8 !important;
+  border-color: #F39C12 !important;
+}
+
+.aiv-note-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  background: #fff;
+  border: 1px solid #DFE6E9;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  min-width: 280px;
+  max-width: 360px;
+  animation: dropIn 0.15s ease-out;
+}
+
+.aiv-note-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #F0F2F5;
+  font-size: 12px;
+  font-weight: 700;
+  color: #F39C12;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.aiv-note-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #2D3436;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* ===== INVOICE PREVIEW AREA ===== */
 .aiv-preview-area {
   padding: 30px 20px;
@@ -406,15 +468,14 @@
   width: 44%;
 }
 
-.ticket-table.new-layout .col-ref {
-  width: 22%;
+.ticket-table.new-layout .col-eticket {
+  width: 28%;
   text-align: center;
 }
 
-.ticket-table.new-layout .col-price,
-.ticket-table.new-layout .price-cell {
-  width: 28%;
-  text-align: right;
+.ticket-table.new-layout .col-pnr {
+  width: 22%;
+  text-align: center;
 }
 
 .ticket-table.new-layout td.col-name {
@@ -446,26 +507,19 @@
   line-height: 1.5;
 }
 
-/* Price cell styling */
-.ticket-table.new-layout .price-cell {
+/* E-Ticket column */
+.ticket-table.new-layout td.col-eticket {
   vertical-align: middle;
-  font-weight: 700;
-  font-size: 13px;
-  color: #1B3A5C;
-  text-align: right;
-  padding-right: 14px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
 }
 
-.ticket-table.new-layout .price-cell .ef,
-.ticket-table.new-layout .price-cell .ei {
-  text-align: right;
-}
-
-/* Booking ref column */
-.ticket-table.new-layout td.col-ref {
+/* PNR column */
+.ticket-table.new-layout td.col-pnr {
   vertical-align: middle;
   font-size: 14px;
   letter-spacing: 1px;
+  font-weight: 700;
 }
 
 /* ===== PDF OVERLAY ===== */
@@ -616,14 +670,9 @@
 }
 
 .agent-edit-form-wrap {
-  max-width: 860px;
-  margin: 24px auto;
-  padding: 0 20px;
-}
-
-.agent-edit-form-wrap .booking-form {
-  background: transparent;
-  padding: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 28px 60px;
 }
 
 .agent-status-badge {

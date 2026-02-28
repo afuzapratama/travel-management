@@ -250,8 +250,8 @@ function rowToBooking(row: any, paxRows: any[]): Booking {
         dob: p.dob as string,
         passport: p.passport as string,
         passportExpiry: p.passport_expiry as string,
-        bookingRef: p.booking_ref as string,
-        price: Number(p.price) || 0,
+        eTicketNumber: (p.e_ticket_number as string) || '',
+        pnr: (p.pnr as string) || '',
       })),
     billTo: {
       name: row.bill_to_name as string,
@@ -266,7 +266,7 @@ function rowToBooking(row: any, paxRows: any[]): Booking {
       status: row.payment_status as Booking['invoice']['status'],
       statusNote: row.payment_status_note as string,
     },
-    serviceFee: Number(row.service_fee) || 0,
+    pricePerPax: Number(row.price_per_pax) || 0,
     discount: Number(row.discount) || 0,
     payment: {
       bankName: row.bank_name as string,
@@ -363,7 +363,7 @@ export async function createBooking(booking: Booking): Promise<Booking> {
       po_number: booking.invoice.poNumber,
       payment_status: booking.invoice.status,
       payment_status_note: booking.invoice.statusNote,
-      service_fee: booking.serviceFee,
+      price_per_pax: booking.pricePerPax,
       discount: booking.discount,
       bank_name: booking.payment.bankName,
       account_name: booking.payment.accountName,
@@ -396,8 +396,8 @@ export async function createBooking(booking: Booking): Promise<Booking> {
       dob: p.dob,
       passport: p.passport,
       passport_expiry: p.passportExpiry,
-      booking_ref: p.bookingRef,
-      price: p.price,
+      e_ticket_number: p.eTicketNumber || '',
+      pnr: p.pnr || '',
       sort_order: i,
     }));
     const { error: paxErr } = await supabase.from('passengers').insert(paxInserts);
@@ -432,7 +432,7 @@ export async function updateBookingInDb(booking: Booking): Promise<void> {
       po_number: booking.invoice.poNumber,
       payment_status: booking.invoice.status,
       payment_status_note: booking.invoice.statusNote,
-      service_fee: booking.serviceFee,
+      price_per_pax: booking.pricePerPax,
       discount: booking.discount,
       bank_name: booking.payment.bankName,
       account_name: booking.payment.accountName,
@@ -466,8 +466,8 @@ export async function updateBookingInDb(booking: Booking): Promise<void> {
       dob: p.dob,
       passport: p.passport,
       passport_expiry: p.passportExpiry,
-      booking_ref: p.bookingRef,
-      price: p.price,
+      e_ticket_number: p.eTicketNumber || '',
+      pnr: p.pnr || '',
       sort_order: i,
     }));
     const { error: paxErr } = await supabase.from('passengers').insert(paxInserts);

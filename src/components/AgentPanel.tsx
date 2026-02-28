@@ -4,11 +4,11 @@
 // Agent profile auto-filled from DB
 // ============================================
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Booking, Passenger } from '../types/booking';
 import { createNewBooking, createEmptyPassenger } from '../types/booking';
-import { formatDateIndo } from '../utils/formatDate';
+import { formatDateSlash, formatDateIndo } from '../utils/formatDate';
 import { generateInvoiceNumber, generatePONumber, getTodayDate } from '../utils/generateNumbers';
 import { searchAirports, getAirportByCode, type Airport } from '../data/airports';
 import AgentInvoiceView from './AgentInvoiceView';
@@ -61,6 +61,10 @@ export default function AgentPanel() {
   const [searchQuery, setSearchQuery] = useState('');
   const PER_PAGE = 10;
 
+  // Validation modal
+  const [validationModal, setValidationModal] = useState<{ show: boolean; title: string; message: ReactNode }>({ show: false, title: '', message: '' });
+  const [showConfirm, setShowConfirm] = useState(false);
+
   // Import passengers from existing invoice
   const [showImport, setShowImport] = useState(false);
   const [importInvNum, setImportInvNum] = useState('');
@@ -75,23 +79,6 @@ export default function AgentPanel() {
     else { setImportFound(null); setImportError('Invoice tidak ditemukan'); }
   }, [importInvNum, bookings]);
 
-  const importPassengers = useCallback(() => {
-    if (!importFound) return;
-    const cloned = importFound.passengers.map(p => ({
-      ...p,
-      id: crypto.randomUUID(),
-      bookingRef: '',
-      price: 0,
-    }));
-    setForm(prev => {
-      // If there's only 1 empty passenger, replace it; otherwise append
-      const hasOnlyEmpty = prev.passengers.length === 1 && !prev.passengers[0].name.trim();
-      return { ...prev, passengers: hasOnlyEmpty ? cloned : [...prev.passengers, ...cloned] };
-    });
-    setImportInvNum('');
-    setImportFound(null);
-    setImportError('');
-  }, [importFound]);
   const [openTypeDD, setOpenTypeDD] = useState<string | null>(null);
   const [openTitleDD, setOpenTitleDD] = useState<string | null>(null);
   const typeDDRef = useRef<HTMLDivElement>(null);
@@ -150,21 +137,15 @@ export default function AgentPanel() {
   };
 
   // Time picker helpers
-  const parseTime12 = (t: string) => {
+  const parseTime24 = (t: string) => {
     const [hh, mm] = (t || '00:00').split(':').map(Number);
-    const period = hh >= 12 ? 'PM' : 'AM';
-    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-    return { hour: String(h12).padStart(2, '0'), minute: String(mm || 0).padStart(2, '0'), period };
+    return { hour: String(hh).padStart(2, '0'), minute: String(mm || 0).padStart(2, '0') };
   };
 
-  const setTimePart = (part: 'hour' | 'minute' | 'period', val: string) => {
-    const cur = parseTime12(form.flight.departureTime);
+  const setTimePart = (part: 'hour' | 'minute', val: string) => {
+    const cur = parseTime24(form.flight.departureTime);
     const updated = { ...cur, [part]: val };
-    let h24 = parseInt(updated.hour);
-    if (updated.period === 'AM' && h24 === 12) h24 = 0;
-    else if (updated.period === 'PM' && h24 !== 12) h24 += 12;
-    const time24 = `${String(h24).padStart(2, '0')}:${updated.minute}`;
-    updateFlight('departureTime', time24);
+    updateFlight('departureTime', `${updated.hour}:${updated.minute}`);
   };
 
   // Close dropdowns on outside click
@@ -200,6 +181,24 @@ export default function AgentPanel() {
     } catch { /* ignore */ }
     return makeNewForm();
   });
+
+  const importPassengers = useCallback(() => {
+    if (!importFound) return;
+    const cloned = importFound.passengers.map(p => ({
+      ...p,
+      id: crypto.randomUUID(),
+      eTicketNumber: '',
+      pnr: '',
+    }));
+    setForm(prev => {
+      // If there's only 1 empty passenger, replace it; otherwise append
+      const hasOnlyEmpty = prev.passengers.length === 1 && !prev.passengers[0].name.trim();
+      return { ...prev, passengers: hasOnlyEmpty ? cloned : [...prev.passengers, ...cloned] };
+    });
+    setImportInvNum('');
+    setImportFound(null);
+    setImportError('');
+  }, [importFound]);
 
   // Auto-save form draft to sessionStorage
   const formTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -273,15 +272,79 @@ export default function AgentPanel() {
     }));
   };
 
-  // --- Submit ---
-  const handleSubmit = async () => {
-    if (!form.billTo.name.trim()) { alert('Nama pelanggan wajib diisi!'); return; }
-    if (!form.flight.flightNumber.trim()) { alert('Flight number wajib diisi!'); return; }
-    if (!form.passengers[0]?.name.trim()) { alert('Minimal 1 penumpang harus diisi!'); return; }
+  // --- Validate & Show Confirmation ---
+  const handleSubmit = () => {
+    if (!form.billTo.name.trim()) { setValidationModal({ show: true, title: 'Data Belum Lengkap', message: 'Nama pelanggan (Bill To) wajib diisi!' }); return; }
+    if (!form.flight.flightNumber.trim()) { setValidationModal({ show: true, title: 'Data Belum Lengkap', message: 'Nomor penerbangan (Flight Number) wajib diisi!' }); return; }
+    if (!form.flight.routeFrom.trim() || !form.flight.routeTo.trim()) { setValidationModal({ show: true, title: 'Data Belum Lengkap', message: 'Rute penerbangan (Dari & Tujuan) wajib diisi!' }); return; }
+    if (!form.flight.departureDate) { setValidationModal({ show: true, title: 'Data Belum Lengkap', message: 'Tanggal keberangkatan wajib diisi!' }); return; }
 
+    // Validate passengers
+    const filledPassengers = form.passengers.filter(p => p.name.trim());
+    if (filledPassengers.length === 0) {
+      setValidationModal({ show: true, title: 'Data Penumpang Kosong', message: 'Anda belum mengisi data penumpang. Minimal 1 penumpang harus diisi sebelum mengirim booking.' });
+      return;
+    }
+
+    // Check each filled passenger for incomplete fields
+    const paxErrors: string[] = [];
+    const depDate = form.flight.departureDate ? new Date(form.flight.departureDate) : null;
+    filledPassengers.forEach((pax, idx) => {
+      const num = idx + 1;
+      const label = pax.name || 'Belum ada nama';
+      const missing: string[] = [];
+      if (!pax.name.trim()) missing.push('Nama');
+      if (!pax.dob) missing.push('Tanggal Lahir');
+      if (!pax.passport.trim()) missing.push('No. Paspor');
+      if (!pax.passportExpiry) {
+        missing.push('Expired Paspor');
+      } else {
+        const expiry = new Date(pax.passportExpiry);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        if (expiry <= today) {
+          paxErrors.push(`Penumpang ${num} (${label}): Paspor sudah expired (${pax.passportExpiry})`);
+        } else if (depDate) {
+          const min6mo = new Date(depDate);
+          min6mo.setMonth(min6mo.getMonth() + 6);
+          if (expiry < min6mo) {
+            paxErrors.push(`Penumpang ${num} (${label}): Paspor expired kurang dari 6 bulan dari tanggal terbang`);
+          }
+        }
+      }
+      if (missing.length > 0) {
+        paxErrors.push(`Penumpang ${num} (${label}): ${missing.join(', ')}`);
+      }
+    });
+    if (paxErrors.length > 0) {
+      setValidationModal({
+        show: true,
+        title: 'Data Penumpang Belum Lengkap',
+        message: (
+          <>
+            <span>Pastikan semua kolom penumpang terisi lengkap:</span>
+            <ul className="ap-modal-err-list">
+              {paxErrors.map((err, i) => (
+                <li key={i}>
+                  <i className="fa-solid fa-circle-xmark"></i>
+                  {err}
+                </li>
+              ))}
+            </ul>
+          </>
+        ),
+      });
+      return;
+    }
+
+    // All valid — show confirmation
+    setShowConfirm(true);
+  };
+
+  // --- Actual Submit ---
+  const doSubmit = async () => {
+    setShowConfirm(false);
     setSubmitting(true);
     try {
-      // Auto-generate invoice number, PO number, and invoice date
       const [invNumber, poNumber] = await Promise.all([
         generateInvoiceNumber(),
         generatePONumber(),
@@ -303,7 +366,7 @@ export default function AgentPanel() {
       };
       await addBooking(booking);
       setForm(makeNewForm());
-      sessionStorage.removeItem(AGENT_FORM_KEY); // Clear saved draft
+      sessionStorage.removeItem(AGENT_FORM_KEY);
       setSuccess(`Booking berhasil dibuat! ${booking.flight.routeFrom}→${booking.flight.routeTo} • ${booking.passengers.length} pax`);
       setTimeout(() => setSuccess(''), 4000);
       setTab('list');
@@ -511,11 +574,11 @@ export default function AgentPanel() {
                 <div className="fi full">
                   <label>Jam Berangkat</label>
                   {(() => {
-                    const t = parseTime12(form.flight.departureTime);
+                    const t = parseTime24(form.flight.departureTime);
                     return (
                       <div className="time-picker">
                         <select value={t.hour} onChange={e => setTimePart('hour', e.target.value)}>
-                          {Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(h => (
+                          {Array.from({length: 24}, (_, i) => String(i).padStart(2, '0')).map(h => (
                             <option key={h} value={h}>{h}</option>
                           ))}
                         </select>
@@ -524,10 +587,6 @@ export default function AgentPanel() {
                           {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
                             <option key={m} value={m}>{m}</option>
                           ))}
-                        </select>
-                        <select value={t.period} onChange={e => setTimePart('period', e.target.value)}>
-                          <option value="AM">AM</option>
-                          <option value="PM">PM</option>
                         </select>
                       </div>
                     );
@@ -809,7 +868,7 @@ export default function AgentPanel() {
                           </div>
                           <div className="bc-row2">
                             <span className="flight-tag">{b.flight.flightNumber}</span>
-                            {b.flight.departureDate && <span className="bc-meta">{formatDateIndo(b.flight.departureDate)}</span>}
+                            {b.flight.departureDate && <span className="bc-meta">{formatDateSlash(b.flight.departureDate)}</span>}
                             <span className="bc-meta">{b.passengers.length} pax</span>
                           </div>
                         </div>
@@ -883,6 +942,96 @@ export default function AgentPanel() {
         </button>
       </nav>
       </>
+      )}
+
+      {/* Validation Modal */}
+      {validationModal.show && (
+        <div className="ap-modal-overlay" onClick={() => setValidationModal(p => ({ ...p, show: false }))}>
+          <div className="ap-modal-box" onClick={e => e.stopPropagation()}>
+            <div className="ap-modal-icon">
+              <i className="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 className="ap-modal-title">{validationModal.title}</h3>
+            <div className="ap-modal-message">{validationModal.message}</div>
+            <button className="ap-modal-btn" onClick={() => setValidationModal(p => ({ ...p, show: false }))}>
+              <i className="fa-solid fa-check"></i> Mengerti
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirm && (
+        <div className="ap-modal-overlay" onClick={() => setShowConfirm(false)}>
+          <div className="ap-confirm-box" onClick={e => e.stopPropagation()}>
+            <div className="ap-confirm-icon">
+              <i className="fa-solid fa-paper-plane"></i>
+            </div>
+            <h3 className="ap-confirm-title">Konfirmasi Booking</h3>
+            <p className="ap-confirm-subtitle">Pastikan data berikut sudah benar sebelum dikirim:</p>
+
+            <div className="ap-confirm-card">
+              <div className="ap-confirm-route">
+                <div className="ap-confirm-airport">
+                  <span className="ap-confirm-code">{form.flight.routeFrom}</span>
+                  <span className="ap-confirm-city">{form.flight.routeFromDetail?.split('(')[0]?.trim() || '-'}</span>
+                </div>
+                <div className="ap-confirm-arrow">
+                  <span className="ap-confirm-flight-badge">{form.flight.flightNumber}</span>
+                  <div className="ap-confirm-arrow-line">
+                    <div className="ap-confirm-line"></div>
+                    <i className="fa-solid fa-plane"></i>
+                  </div>
+                </div>
+                <div className="ap-confirm-airport">
+                  <span className="ap-confirm-code">{form.flight.routeTo}</span>
+                  <span className="ap-confirm-city">{form.flight.routeToDetail?.split('(')[0]?.trim() || '-'}</span>
+                </div>
+              </div>
+
+              <div className="ap-confirm-details">
+                <div className="ap-confirm-detail">
+                  <i className="fa-regular fa-calendar"></i>
+                  <div>
+                    <span className="ap-confirm-detail-label">Tanggal</span>
+                    <span className="ap-confirm-detail-value">{formatDateIndo(form.flight.departureDate)}</span>
+                  </div>
+                </div>
+                <div className="ap-confirm-detail">
+                  <i className="fa-regular fa-clock"></i>
+                  <div>
+                    <span className="ap-confirm-detail-label">Waktu</span>
+                    <span className="ap-confirm-detail-value">{form.flight.departureTime || '00:00'}</span>
+                  </div>
+                </div>
+                <div className="ap-confirm-detail">
+                  <i className="fa-solid fa-users"></i>
+                  <div>
+                    <span className="ap-confirm-detail-label">Penumpang</span>
+                    <span className="ap-confirm-detail-value">{form.passengers.filter(p => p.name.trim()).length} Pax</span>
+                  </div>
+                </div>
+                <div className="ap-confirm-detail">
+                  <i className="fa-solid fa-user-tie"></i>
+                  <div>
+                    <span className="ap-confirm-detail-label">Customer</span>
+                    <span className="ap-confirm-detail-value">{form.billTo.name}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="ap-confirm-actions">
+              <button className="ap-confirm-cancel" onClick={() => setShowConfirm(false)}>
+                <i className="fa-solid fa-xmark"></i> Batal
+              </button>
+              <button className="ap-confirm-submit" onClick={doSubmit} disabled={submitting}>
+                {submitting ? <><i className="fa-solid fa-spinner fa-spin"></i> Mengirim...</> :
+                  <><i className="fa-solid fa-paper-plane"></i> Kirim Booking</>}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

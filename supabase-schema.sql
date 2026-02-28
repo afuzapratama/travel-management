@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   payment_status TEXT NOT NULL DEFAULT 'belum-lunas' CHECK (payment_status IN ('belum-lunas', 'lunas', 'dp')),
   payment_status_note TEXT NOT NULL DEFAULT '',
   -- financials
-  service_fee NUMERIC NOT NULL DEFAULT 0,
+  price_per_pax NUMERIC NOT NULL DEFAULT 0,
   discount NUMERIC NOT NULL DEFAULT 0,
   -- payment info
   bank_name TEXT NOT NULL DEFAULT 'Bank OCBC NISP',
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS passengers (
   dob TEXT NOT NULL DEFAULT '',
   passport TEXT NOT NULL DEFAULT '',
   passport_expiry TEXT NOT NULL DEFAULT '',
-  booking_ref TEXT NOT NULL DEFAULT '',
-  price NUMERIC NOT NULL DEFAULT 0,
+  e_ticket_number TEXT NOT NULL DEFAULT '',
+  pnr TEXT NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -163,3 +163,9 @@ CREATE POLICY "Allow all company_settings" ON company_settings FOR ALL USING (tr
 
 -- Auto update timestamp
 CREATE TRIGGER set_updated_at_company_settings BEFORE UPDATE ON company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ===== MIGRATION: Rename service_fee -> price_per_pax, passengers booking_ref -> pnr, remove price, add e_ticket_number =====
+ALTER TABLE bookings RENAME COLUMN service_fee TO price_per_pax;
+ALTER TABLE passengers RENAME COLUMN booking_ref TO pnr;
+ALTER TABLE passengers ADD COLUMN IF NOT EXISTS e_ticket_number TEXT NOT NULL DEFAULT '';
+ALTER TABLE passengers DROP COLUMN IF EXISTS price;

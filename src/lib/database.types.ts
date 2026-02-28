@@ -58,7 +58,7 @@ export interface Database {
           po_number: string;
           payment_status: 'belum-lunas' | 'lunas' | 'dp';
           payment_status_note: string;
-          service_fee: number;
+          price_per_pax: number;
           discount: number;
           bank_name: string;
           account_name: string;
@@ -92,8 +92,8 @@ export interface Database {
           dob: string;
           passport: string;
           passport_expiry: string;
-          booking_ref: string;
-          price: number;
+          e_ticket_number: string;
+          pnr: string;
           sort_order: number;
           created_at: string;
         };

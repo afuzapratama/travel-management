@@ -252,7 +252,7 @@
 
 .invoice-page .ticket-table thead th:last-child {
     border-radius: 0 6px 0 0;
-    text-align: right;
+    text-align: center;
 }
 
 .invoice-page .ticket-table tbody td {
@@ -273,6 +273,8 @@
 .invoice-page .col-class { width: 8%; text-align: center; }
 .invoice-page .col-qty { width: 7%; text-align: center; }
 .invoice-page .col-price { width: 12%; text-align: right; }
+.invoice-page .col-eticket { width: 28%; text-align: center; }
+.invoice-page .col-pnr { width: 22%; text-align: center; }
 
 .invoice-page .route-code {
     font-weight: 700;

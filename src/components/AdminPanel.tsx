@@ -6,7 +6,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import type { Booking } from '../types/booking';
-import { formatDateIndo } from '../utils/formatDate';
+import { formatDateSlash } from '../utils/formatDate';
 import { formatRupiah } from '../utils/formatCurrency';
 import AdminInvoiceView from './AdminInvoiceView';
 import AdminSettings from './AdminSettings';
@@ -60,7 +60,7 @@ export default function AdminPanel() {
   }, [bookings, tab]);
 
   const grandTotal = (b: Booking) =>
-    b.passengers.reduce((s, p) => s + p.price, 0) + b.serviceFee - b.discount;
+    b.pricePerPax * b.passengers.length - b.discount;
 
   const statusLabel: Record<string, string> = {
     pending: 'Pending',
@@ -194,7 +194,7 @@ export default function AdminPanel() {
                   return filtered.slice(startIdx, startIdx + PER_PAGE).map((b, i) => (
                   <tr key={b.id} onClick={() => setViewId(b.id)} className="clickable-row">
                     <td style={{ textAlign: 'center' }}>{startIdx + i + 1}</td>
-                    <td>{formatDateIndo(b.createdAt.slice(0, 10))}</td>
+                    <td>{formatDateSlash(b.createdAt.slice(0, 10))}</td>
                     <td><strong>{b.billTo.name || '—'}</strong></td>
                     <td>
                       <span className="route-tag-sm">{b.flight.routeFrom} → {b.flight.routeTo}</span>

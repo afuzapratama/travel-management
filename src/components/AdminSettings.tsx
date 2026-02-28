@@ -51,7 +51,7 @@ export default function AdminSettings() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]); // eslint-disable-line react-hooks/set-state-in-effect
 
   // Load company settings
   useEffect(() => {

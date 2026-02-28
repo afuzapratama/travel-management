@@ -12,7 +12,7 @@ import type { Booking, Passenger } from '../types/booking';
 import { createEmptyPassenger } from '../types/booking';
 import { formatRupiah } from '../utils/formatCurrency';
 import { terbilang } from '../utils/terbilang';
-import { formatDateIndo, formatDateShort } from '../utils/formatDate';
+import { formatDateSlash } from '../utils/formatDate';
 import { exportToPDF } from '../utils/exportPdf';
 import { searchAirports, getAirportByCode, type Airport } from '../data/airports';
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
@@ -103,11 +103,11 @@ function InvoiceContent({ booking, globalLogo, globalSignature, showKeterangan, 
           <div className="bill-box-label">Detail Invoice</div>
           <div className="meta-row">
             <span className="label">Tanggal Invoice</span>
-            <span className="value meta-readonly">{booking.invoice.invoiceDate ? formatDateIndo(booking.invoice.invoiceDate) : '—'}</span>
+            <span className="value meta-readonly">{booking.invoice.invoiceDate ? formatDateSlash(booking.invoice.invoiceDate) : '—'}</span>
           </div>
           <div className="meta-row">
             <span className="label">Jatuh Tempo</span>
-            <span className="value meta-readonly">{booking.invoice.dueDate ? formatDateIndo(booking.invoice.dueDate) : '—'}</span>
+            <span className="value meta-readonly">{booking.invoice.dueDate ? formatDateSlash(booking.invoice.dueDate) : '—'}</span>
           </div>
           <div className="meta-row">
             <span className="label">No. PO</span>
@@ -129,7 +129,7 @@ function InvoiceContent({ booking, globalLogo, globalSignature, showKeterangan, 
       <div className="flight-info-bar">
         <div className="fi-item"><span className="fi-label">Flight</span><span className="fi-value">{booking.flight.flightNumber || '—'}</span></div>
         <div className="fi-item"><span className="fi-label">Route</span><span className="fi-value">{booking.flight.routeFrom || '___'} → {booking.flight.routeTo || '___'}</span></div>
-        <div className="fi-item"><span className="fi-label">Departure Date</span><span className="fi-value">{booking.flight.departureDate ? formatDateIndo(booking.flight.departureDate) : '—'}</span></div>
+        <div className="fi-item"><span className="fi-label">Departure Date</span><span className="fi-value">{booking.flight.departureDate ? formatDateSlash(booking.flight.departureDate) : '—'}</span></div>
         <div className="fi-item"><span className="fi-label">Time</span><span className="fi-value">{booking.flight.departureTime || '--:--'}</span></div>
         <div className="fi-item"><span className="fi-label">Total Pax</span><span className="fi-value fi-pax">{booking.passengers.length}</span></div>
       </div>
@@ -145,8 +145,8 @@ function InvoiceContent({ booking, globalLogo, globalSignature, showKeterangan, 
             <tr>
               <th className="col-no">No</th>
               <th className="col-name">Nama Penumpang</th>
-              <th className="col-ref">Booking Ref</th>
-              <th className="col-price">Harga (Rp)</th>
+              <th className="col-eticket">E-Ticket Number</th>
+              <th className="col-pnr">PNR</th>
             </tr>
           </thead>
           <tbody>
@@ -154,19 +154,19 @@ function InvoiceContent({ booking, globalLogo, globalSignature, showKeterangan, 
               <tr key={pax.id}>
                 <td className="col-no">{idx + 1}</td>
                 <td className="col-name">
-                  <div className="pax-name">{pax.title ? `${pax.title}. ` : ''}{pax.name || '—'}</div>
+                  <div className="pax-name">{`${pax.title || 'MR'}. ${pax.name}`}</div>
                   <span className="pax-type">{pax.type}</span>
                   <div className="pax-sub">
-                    {pax.dob ? formatDateShort(pax.dob) : '—'} &nbsp;|&nbsp;
+                    {pax.dob ? formatDateSlash(pax.dob) : '—'} &nbsp;|&nbsp;
                     {pax.passport || '—'} &nbsp;|&nbsp;
-                    {pax.passportExpiry ? formatDateShort(pax.passportExpiry) : '—'}
+                    {pax.passportExpiry ? formatDateSlash(pax.passportExpiry) : '—'}
                   </div>
                 </td>
-                <td className="col-ref" style={{ textAlign: 'center' }}>
-                  <strong>{pax.bookingRef || '—'}</strong>
+                <td className="col-eticket" style={{ textAlign: 'center' }}>
+                  <strong>{pax.eTicketNumber || '—'}</strong>
                 </td>
-                <td className="price-cell">
-                  {showHarga ? (pax.price ? formatRupiah(pax.price) : '—') : <span className="price-masked">XXXXX</span>}
+                <td className="col-pnr" style={{ textAlign: 'center' }}>
+                  <strong>{pax.pnr || '—'}</strong>
                 </td>
               </tr>
             ))}
@@ -175,34 +175,40 @@ function InvoiceContent({ booking, globalLogo, globalSignature, showKeterangan, 
       </div>
 
       {/* SUMMARY */}
-      <div className="summary-section">
-        {showKeterangan && (
-          <div className="summary-notes">
-            <h4><i className="fa-solid fa-clipboard-list" style={{ marginRight: 4 }}></i> Keterangan:</h4>
-            <ul>
-              <li>Total Penumpang: <strong>{booking.passengers.length} Pax</strong></li>
-              <li>Rute: {booking.flight.routeFrom} ({booking.flight.routeFromDetail}) → {booking.flight.routeTo} ({booking.flight.routeToDetail})</li>
-              <li>Maskapai: {booking.flight.flightNumber}</li>
-              {booking.flight.departureDate && (
-                <li>Tanggal Terbang: {formatDateIndo(booking.flight.departureDate)} {booking.flight.departureTime && `(Dep ${booking.flight.departureTime})`}</li>
-              )}
-              {booking.notes && <li>{booking.notes}</li>}
-            </ul>
-          </div>
-        )}
-        <div className="summary-totals">
-          <div className="total-row"><span className="label">Subtotal</span><span className="value">{showHarga ? <>Rp {formatRupiah(subtotal)}</> : 'Rp XXXXX'}</span></div>
-          <div className="total-row"><span className="label">Service Fee</span><span className="value">{showHarga ? <>Rp {formatRupiah(booking.serviceFee)}</> : 'Rp XXXXX'}</span></div>
-          <div className="total-row discount"><span className="label">Diskon</span><span className="value">{showHarga ? <>- Rp {formatRupiah(booking.discount)}</> : '- Rp XXXXX'}</span></div>
-          <div className="total-row grand-total"><span className="label">GRAND TOTAL</span><span className="value">Rp {formatRupiah(grandTotal)}</span></div>
+      {(showKeterangan || showHarga) && (
+        <div className="summary-section">
+          {showKeterangan && (
+            <div className="summary-notes">
+              <h4><i className="fa-solid fa-clipboard-list" style={{ marginRight: 4 }}></i> Keterangan:</h4>
+              <ul>
+                <li>Total Penumpang: <strong>{booking.passengers.length} Pax</strong></li>
+                <li>Rute: {booking.flight.routeFrom} ({booking.flight.routeFromDetail}) → {booking.flight.routeTo} ({booking.flight.routeToDetail})</li>
+                <li>Maskapai: {booking.flight.flightNumber}</li>
+                {booking.flight.departureDate && (
+                  <li>Tanggal Terbang: {formatDateSlash(booking.flight.departureDate)} {booking.flight.departureTime && `(Dep ${booking.flight.departureTime})`}</li>
+                )}
+                {booking.notes && <li>{booking.notes}</li>}
+              </ul>
+            </div>
+          )}
+          {showHarga && (
+            <div className="summary-totals">
+              <div className="total-row"><span className="label">Price Per Pax</span><span className="value">Rp {formatRupiah(booking.pricePerPax)}</span></div>
+              <div className="total-row"><span className="label">Subtotal ({booking.passengers.length} Pax)</span><span className="value">Rp {formatRupiah(subtotal)}</span></div>
+              <div className="total-row discount"><span className="label">Diskon</span><span className="value">- Rp {formatRupiah(booking.discount)}</span></div>
+              <div className="total-row grand-total"><span className="label">GRAND TOTAL</span><span className="value">Rp {formatRupiah(grandTotal)}</span></div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* TERBILANG */}
-      <div className="terbilang-box">
-        <div className="label">Terbilang:</div>
-        <div className="text">{showHarga ? <># {terbilang(grandTotal)} #</> : '# XXXXX #'}</div>
-      </div>
+      {showHarga && (
+        <div className="terbilang-box">
+          <div className="label">Terbilang:</div>
+          <div className="text"># {terbilang(grandTotal)} #</div>
+        </div>
+      )}
 
       {/* PAYMENT */}
       <div className="payment-section">
@@ -323,11 +329,9 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
   };
 
   // Time picker helper
-  const parseTime12 = (t: string) => {
+  const parseTime24 = (t: string) => {
     const [hh, mm] = (t || '00:00').split(':').map(Number);
-    const period = hh >= 12 ? 'PM' : 'AM';
-    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-    return { hour: String(h12).padStart(2, '0'), minute: String(mm || 0).padStart(2, '0'), period };
+    return { hour: String(hh).padStart(2, '0'), minute: String(mm || 0).padStart(2, '0') };
   };
 
   // Derive show/hide from booking (admin controls this)
@@ -338,7 +342,7 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
   useEffect(() => {
     const latest = bookings.find(b => b.id === bookingId);
     if (latest) {
-      setBooking(latest);
+      setBooking(latest); // eslint-disable-line react-hooks/set-state-in-effect
       // If status changed away from pending while editing, cancel edit
       if (latest.status !== 'pending' && editMode) {
         setEditMode(false);
@@ -354,8 +358,8 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
   const globalSignature = companySettings?.signatureUrl || '';
 
   // Calculations
-  const subtotal = booking?.passengers.reduce((s, p) => s + p.price, 0) || 0;
-  const grandTotal = subtotal + (booking?.serviceFee || 0) - (booking?.discount || 0);
+  const subtotal = (booking?.pricePerPax || 0) * (booking?.passengers.length || 0);
+  const grandTotal = subtotal - (booking?.discount || 0);
 
   // Status helpers
   const statusLabel: Record<string, string> = {
@@ -494,14 +498,11 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
     if (code) setAcResults(searchAirports(code));
   };
   const handleEditAirportBlur = () => { setTimeout(() => setAcSearchText(''), 200); };
-  const setEditTimePart = (part: 'hour' | 'minute' | 'period', val: string) => {
+  const setEditTimePart = (part: 'hour' | 'minute', val: string) => {
     if (!editForm) return;
-    const cur = parseTime12(editForm.flight.departureTime);
+    const cur = parseTime24(editForm.flight.departureTime);
     const updated = { ...cur, [part]: val };
-    let h24 = parseInt(updated.hour);
-    if (updated.period === 'AM' && h24 === 12) h24 = 0;
-    else if (updated.period === 'PM' && h24 !== 12) h24 += 12;
-    uf('departureTime', `${String(h24).padStart(2, '0')}:${updated.minute}`);
+    uf('departureTime', `${updated.hour}:${updated.minute}`);
   };
   const searchEditImportInvoice = useCallback(() => {
     if (!editImportInvNum.trim()) { setEditImportError('Masukkan nomor invoice'); setEditImportFound(null); return; }
@@ -512,7 +513,7 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
   }, [editImportInvNum, bookings]);
   const importEditPassengers = useCallback(() => {
     if (!editImportFound) return;
-    const cloned = editImportFound.passengers.map(p => ({ ...p, id: crypto.randomUUID(), bookingRef: '', price: 0 }));
+    const cloned = editImportFound.passengers.map(p => ({ ...p, id: crypto.randomUUID(), eTicketNumber: '', pnr: '' }));
     setEditForm(prev => {
       if (!prev) return prev;
       const hasOnlyEmpty = prev.passengers.length === 1 && !prev.passengers[0].name.trim();
@@ -644,11 +645,11 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
                 <div className="fi full">
                   <label>Jam Berangkat</label>
                   {(() => {
-                    const t = parseTime12(editForm.flight.departureTime);
+                    const t = parseTime24(editForm.flight.departureTime);
                     return (
                       <div className="time-picker">
                         <select value={t.hour} onChange={e => setEditTimePart('hour', e.target.value)}>
-                          {Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0')).map(h => (
+                          {Array.from({length: 24}, (_, i) => String(i).padStart(2, '0')).map(h => (
                             <option key={h} value={h}>{h}</option>
                           ))}
                         </select>
@@ -657,10 +658,6 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
                           {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
                             <option key={m} value={m}>{m}</option>
                           ))}
-                        </select>
-                        <select value={t.period} onChange={e => setEditTimePart('period', e.target.value)}>
-                          <option value="AM">AM</option>
-                          <option value="PM">PM</option>
                         </select>
                       </div>
                     );

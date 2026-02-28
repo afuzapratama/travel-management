@@ -26,3 +26,14 @@ export function formatDateShort(dateStr: string): string {
   const year = d.getFullYear();
   return `${day} ${mon} ${year}`;
 }
+
+/** DD/MM/YYYY format — used everywhere except invoice detail */
+export function formatDateSlash(dateStr: string): string {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}

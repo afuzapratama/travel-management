@@ -9,15 +9,15 @@ import { useApp } from '../context/AppContext';
 import type { Booking, BookingStatus } from '../types/booking';
 import { formatRupiah, parseRupiahInput } from '../utils/formatCurrency';
 import { terbilang } from '../utils/terbilang';
-import { formatDateIndo, formatDateShort } from '../utils/formatDate';
+import { formatDateSlash } from '../utils/formatDate';
 import { exportToPDF } from '../utils/exportPdf';
 import '../components/InvoicePreview.css';
 import './AdminInvoiceView.css';
 
 // ===== INLINE EDITABLE FIELD =====
-function E({ value, onChange, placeholder = '—', className = '', style, type = 'text' }: {
+function E({ value, onChange, placeholder = '—', className = '', style, type = 'text', displayValue }: {
   value: string; onChange: (v: string) => void; placeholder?: string;
-  className?: string; style?: CSSProperties; type?: string;
+  className?: string; style?: CSSProperties; type?: string; displayValue?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [temp, setTemp] = useState(value);
@@ -30,8 +30,9 @@ function E({ value, onChange, placeholder = '—', className = '', style, type =
       onChange={e => setTemp(e.target.value)} onBlur={save}
       onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setTemp(value); setEditing(false); } }} />;
   }
+  const shown = displayValue ?? value;
   return <span className={`ef ${className} ${!value ? 'empty' : ''}`} style={style}
-    onClick={() => { setTemp(value); setEditing(true); }}>{value || placeholder}</span>;
+    onClick={() => { setTemp(value); setEditing(true); }}>{shown || placeholder}</span>;
 }
 
 // ===== INLINE EDITABLE CURRENCY =====
@@ -41,7 +42,7 @@ function EC({ value, onChange, className = '' }: {
   const [editing, setEditing] = useState(false);
   const [temp, setTemp] = useState(value ? formatRupiah(value) : '');
   const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { setTemp(value ? formatRupiah(value) : ''); }, [value]);
+  useEffect(() => { setTemp(value ? formatRupiah(value) : ''); }, [value]); // eslint-disable-line react-hooks/set-state-in-effect
   useEffect(() => { if (editing) { ref.current?.focus(); ref.current?.select(); } }, [editing]);
   const save = () => { onChange(parseRupiahInput(temp)); setEditing(false); };
   if (editing) {
@@ -78,15 +79,15 @@ function ES({ value, onChange, options, className = '' }: {
 }
 
 // ===== COPYABLE READ-ONLY FIELD (agent data) =====
-function C({ value, placeholder = '—', className = '' }: {
-  value: string; placeholder?: string; className?: string;
+function C({ value, placeholder = '—', className = '', copyValue }: {
+  value: string; placeholder?: string; className?: string; copyValue?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const text = value || placeholder;
   const isEmpty = !value;
   const handleCopy = () => {
     if (!value) return;
-    navigator.clipboard.writeText(value).then(() => {
+    navigator.clipboard.writeText(copyValue ?? value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     });
@@ -149,7 +150,19 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
   const { bookings, updateBooking, companySettings } = useApp();
   const [booking, setBooking] = useState<Booking>(() => bookings.find(b => b.id === bookingId)!);
   const [exporting, setExporting] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const noteRef = useRef<HTMLDivElement>(null);
+
+  // Close note popup on outside click
+  useEffect(() => {
+    if (!showNote) return;
+    const handler = (e: MouseEvent) => {
+      if (noteRef.current && !noteRef.current.contains(e.target as Node)) setShowNote(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showNote]);
 
   // Derive show/hide from booking
   const showKeterangan = !booking?.hideKeterangan;
@@ -159,7 +172,7 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
   useEffect(() => {
     if (!booking && bookings.length > 0) {
       const found = bookings.find(b => b.id === bookingId);
-      if (found) setBooking(found);
+      if (found) setBooking(found); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [bookings, bookingId, booking]);
 
@@ -199,8 +212,8 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
   }, []);
 
   // Calculations
-  const subtotal = booking.passengers.reduce((s, p) => s + p.price, 0);
-  const grandTotal = subtotal + booking.serviceFee - booking.discount;
+  const subtotal = booking.pricePerPax * booking.passengers.length;
+  const grandTotal = subtotal - booking.discount;
 
   // PDF Export
   const handleExport = async () => {
@@ -231,9 +244,26 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
     <div className="aiv-container">
       {/* ===== ACTION BAR ===== */}
       <div className="aiv-actionbar">
-        <button className="aiv-back" onClick={onBack}>
-          <i className="fa-solid fa-arrow-left"></i> Kembali
-        </button>
+        <div className="aiv-actions-left">
+          <button className="aiv-back" onClick={onBack}>
+            <i className="fa-solid fa-arrow-left"></i> Kembali
+          </button>
+          {booking.notes && (
+            <div className="aiv-note-wrapper" ref={noteRef}>
+              <button className={`aiv-btn aiv-note-btn ${showNote ? 'active' : ''}`} onClick={() => setShowNote(p => !p)} title="Catatan dari Agent">
+                <i className="fa-solid fa-note-sticky"></i> Note
+              </button>
+              {showNote && (
+                <div className="aiv-note-popup">
+                  <div className="aiv-note-header">
+                    <i className="fa-solid fa-note-sticky"></i> Catatan dari Agent
+                  </div>
+                  <div className="aiv-note-body">{booking.notes}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="aiv-actions-center">
           <CustomStatusSelect
             value={booking.status}
@@ -310,11 +340,11 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
               <div className="bill-box-label">Detail Invoice</div>
               <div className="meta-row">
                 <span className="label">Tanggal Invoice</span>
-                <span className="value meta-readonly">{booking.invoice.invoiceDate ? formatDateIndo(booking.invoice.invoiceDate) : '—'}</span>
+                <span className="value meta-readonly">{booking.invoice.invoiceDate ? formatDateSlash(booking.invoice.invoiceDate) : '—'}</span>
               </div>
               <div className="meta-row">
                 <span className="label">Jatuh Tempo</span>
-                <span className="value"><E value={booking.invoice.dueDate} onChange={v => uInv('dueDate', v)} type="date" placeholder="Isi tanggal..." /></span>
+                <span className="value"><E value={booking.invoice.dueDate} onChange={v => uInv('dueDate', v)} type="date" placeholder="Isi tanggal..." displayValue={booking.invoice.dueDate ? formatDateSlash(booking.invoice.dueDate) : ''} /></span>
               </div>
               <div className="meta-row">
                 <span className="label">No. PO</span>
@@ -347,7 +377,7 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
             <div className="fi-item">
               <span className="fi-label">Departure Date</span>
               <span className="fi-value">
-                <C value={booking.flight.departureDate ? formatDateIndo(booking.flight.departureDate) : ''} />
+                <C value={booking.flight.departureDate ? formatDateSlash(booking.flight.departureDate) : ''} />
               </span>
             </div>
             <div className="fi-item">
@@ -371,8 +401,8 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
                 <tr>
                   <th className="col-no">No</th>
                   <th className="col-name">Nama Penumpang</th>
-                  <th className="col-ref">Booking Ref</th>
-                  <th className="col-price">Harga (Rp)</th>
+                  <th className="col-eticket">E-Ticket Number</th>
+                  <th className="col-pnr">PNR</th>
                 </tr>
               </thead>
               <tbody>
@@ -381,22 +411,24 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
                     <td className="col-no">{idx + 1}</td>
                     <td className="col-name">
                       <div className="pax-name">
-                        <C value={`${pax.title || 'MR'}. ${pax.name}`} placeholder="NAMA PENUMPANG" />
+                        <C value={`${pax.title || 'MR'}. ${pax.name}`} copyValue={pax.name} placeholder="NAMA PENUMPANG" />
                       </div>
                       <span className="pax-type">{pax.type}</span>
                       <div className="pax-sub">
-                        <C value={pax.dob ? formatDateShort(pax.dob) : ''} placeholder="—" className="cf-inline" /> &nbsp;|&nbsp;
+                        <C value={pax.dob ? formatDateSlash(pax.dob) : ''} placeholder="—" className="cf-inline" /> &nbsp;|&nbsp;
                         <C value={pax.passport} placeholder="—" className="cf-inline" /> &nbsp;|&nbsp;
-                        <C value={pax.passportExpiry ? formatDateShort(pax.passportExpiry) : ''} placeholder="—" className="cf-inline" />
+                        <C value={pax.passportExpiry ? formatDateSlash(pax.passportExpiry) : ''} placeholder="—" className="cf-inline" />
                       </div>
                     </td>
-                    <td className="col-ref" style={{ textAlign: 'center' }}>
+                    <td className="col-eticket" style={{ textAlign: 'center' }}>
                       <strong>
-                        <E value={pax.bookingRef} onChange={v => uPax(pax.id, 'bookingRef', v)} placeholder="______" />
+                        <E value={pax.eTicketNumber} onChange={v => uPax(pax.id, 'eTicketNumber', v)} placeholder="______" />
                       </strong>
                     </td>
-                    <td className="price-cell">
-                      {showHarga ? <EC value={pax.price} onChange={v => uPax(pax.id, 'price', v)} /> : <span className="price-masked">XXXXX</span>}
+                    <td className="col-pnr" style={{ textAlign: 'center' }}>
+                      <strong>
+                        <E value={pax.pnr} onChange={v => uPax(pax.id, 'pnr', v)} placeholder="______" />
+                      </strong>
                     </td>
                   </tr>
                 ))}
@@ -405,46 +437,52 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
           </div>
 
           {/* ===== SUMMARY ===== */}
-          <div className="summary-section">
-            {showKeterangan && (
-              <div className="summary-notes">
-                <h4><i className="fa-solid fa-clipboard-list" style={{ marginRight: 4 }}></i> Keterangan:</h4>
-                <ul>
-                  <li>Total Penumpang: <strong>{booking.passengers.length} Pax</strong></li>
-                  <li>Rute: {booking.flight.routeFrom} ({booking.flight.routeFromDetail}) → {booking.flight.routeTo} ({booking.flight.routeToDetail})</li>
-                  <li>Maskapai: {booking.flight.flightNumber}</li>
-                  {booking.flight.departureDate && (
-                    <li>Tanggal Terbang: {formatDateIndo(booking.flight.departureDate)} {booking.flight.departureTime && `(Dep ${booking.flight.departureTime})`}</li>
-                  )}
-                  {booking.notes && <li>{booking.notes}</li>}
-                </ul>
-              </div>
-            )}
-            <div className="summary-totals">
-              <div className="total-row">
-                <span className="label">Subtotal</span>
-                <span className="value">{showHarga ? <>Rp {formatRupiah(subtotal)}</> : 'Rp XXXXX'}</span>
-              </div>
-              <div className="total-row">
-                <span className="label">Service Fee</span>
-                <span className="value">{showHarga ? <>Rp <EC value={booking.serviceFee} onChange={v => u('serviceFee', v)} /></> : 'Rp XXXXX'}</span>
-              </div>
-              <div className="total-row discount">
-                <span className="label">Diskon</span>
-                <span className="value">{showHarga ? <>- Rp <EC value={booking.discount} onChange={v => u('discount', v)} /></> : '- Rp XXXXX'}</span>
-              </div>
-              <div className="total-row grand-total">
-                <span className="label">GRAND TOTAL</span>
-                <span className="value">Rp {formatRupiah(grandTotal)}</span>
-              </div>
+          {(showKeterangan || showHarga) && (
+            <div className="summary-section">
+              {showKeterangan && (
+                <div className="summary-notes">
+                  <h4><i className="fa-solid fa-clipboard-list" style={{ marginRight: 4 }}></i> Keterangan:</h4>
+                  <ul>
+                    <li>Total Penumpang: <strong>{booking.passengers.length} Pax</strong></li>
+                    <li>Rute: {booking.flight.routeFrom} ({booking.flight.routeFromDetail}) → {booking.flight.routeTo} ({booking.flight.routeToDetail})</li>
+                    <li>Maskapai: {booking.flight.flightNumber}</li>
+                    {booking.flight.departureDate && (
+                      <li>Tanggal Terbang: {formatDateSlash(booking.flight.departureDate)} {booking.flight.departureTime && `(Dep ${booking.flight.departureTime})`}</li>
+                    )}
+                    {booking.notes && <li>{booking.notes}</li>}
+                  </ul>
+                </div>
+              )}
+              {showHarga && (
+                <div className="summary-totals">
+                  <div className="total-row">
+                    <span className="label">Price Per Pax</span>
+                    <span className="value">Rp <EC value={booking.pricePerPax} onChange={v => u('pricePerPax', v)} /></span>
+                  </div>
+                  <div className="total-row">
+                    <span className="label">Subtotal ({booking.passengers.length} Pax)</span>
+                    <span className="value">Rp {formatRupiah(subtotal)}</span>
+                  </div>
+                  <div className="total-row discount">
+                    <span className="label">Diskon</span>
+                    <span className="value">- Rp <EC value={booking.discount} onChange={v => u('discount', v)} /></span>
+                  </div>
+                  <div className="total-row grand-total">
+                    <span className="label">GRAND TOTAL</span>
+                    <span className="value">Rp {formatRupiah(grandTotal)}</span>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* TERBILANG */}
-          <div className="terbilang-box">
-            <div className="label">Terbilang:</div>
-            <div className="text">{showHarga ? <># {terbilang(grandTotal)} #</> : '# XXXXX #'}</div>
-          </div>
+          {showHarga && (
+            <div className="terbilang-box">
+              <div className="label">Terbilang:</div>
+              <div className="text"># {terbilang(grandTotal)} #</div>
+            </div>
+          )}
 
           {/* PAYMENT */}
           <div className="payment-section">

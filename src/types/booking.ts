@@ -23,8 +23,8 @@ export interface Passenger {
   dob: string;
   passport: string;
   passportExpiry: string;
-  bookingRef: string;
-  price: number;
+  eTicketNumber: string;
+  pnr: string;
 }
 
 export interface BillTo {
@@ -70,7 +70,7 @@ export interface Booking {
   passengers: Passenger[];
   billTo: BillTo;
   invoice: InvoiceMeta;
-  serviceFee: number;
+  pricePerPax: number;
   discount: number;
   payment: PaymentInfo;
   company: CompanyInfo;
@@ -110,8 +110,8 @@ export function createEmptyPassenger(): Passenger {
     dob: '',
     passport: '',
     passportExpiry: '',
-    bookingRef: '',
-    price: 0,
+    eTicketNumber: '',
+    pnr: '',
   };
 }
 
@@ -140,7 +140,7 @@ export function createNewBooking(): Booking {
       status: 'belum-lunas',
       statusNote: '',
     },
-    serviceFee: 0,
+    pricePerPax: 0,
     discount: 0,
     payment: { ...DEFAULT_PAYMENT },
     company: { ...DEFAULT_COMPANY },
