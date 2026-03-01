@@ -12,6 +12,8 @@ import { formatDateSlash, formatDateIndo } from '../utils/formatDate';
 import { generateInvoiceNumber, generatePONumber, getTodayDate } from '../utils/generateNumbers';
 import { searchAirports, getAirportByCode, type Airport } from '../data/airports';
 import AgentInvoiceView from './AgentInvoiceView';
+import DateInput from './DateInput';
+import './DateInput.css';
 import './AgentPanel.css';
 
 const PAX_TYPE_OPTIONS = [
@@ -352,6 +354,7 @@ export default function AgentPanel() {
 
       const booking: Booking = {
         ...form,
+        passengers: form.passengers.filter(p => p.name.trim()),
         id: crypto.randomUUID(),
         agentId: agent?.id,
         status: 'pending',
@@ -532,8 +535,8 @@ export default function AgentPanel() {
                 </div>
                 <div className="fi">
                   <label>Tanggal Berangkat</label>
-                  <input type="date" value={form.flight.departureDate}
-                    onChange={e => updateFlight('departureDate', e.target.value)} />
+                  <DateInput value={form.flight.departureDate}
+                    onChange={v => updateFlight('departureDate', v)} />
                 </div>
                 <div className="fi full ac-wrap" ref={acField === 'from' ? acRef : undefined}>
                   <label>Bandara Asal</label>
@@ -757,16 +760,16 @@ export default function AgentPanel() {
                     )}
                   </div>
                   <div className="pax-cell" data-label="Tgl Lahir">
-                    <input type="date" value={pax.dob}
-                      onChange={e => updatePax(pax.id, 'dob', e.target.value)} />
+                    <DateInput value={pax.dob}
+                      onChange={v => updatePax(pax.id, 'dob', v)} placeholder="DD/MM/YYYY" />
                   </div>
                   <div className="pax-cell" data-label="No. Paspor">
                     <input type="text" placeholder="A12345678" value={pax.passport}
                       onChange={e => updatePax(pax.id, 'passport', e.target.value.toUpperCase())} />
                   </div>
                   <div className="pax-cell" data-label="Expired Paspor">
-                    <input type="date" value={pax.passportExpiry}
-                      onChange={e => updatePax(pax.id, 'passportExpiry', e.target.value)} />
+                    <DateInput value={pax.passportExpiry}
+                      onChange={v => updatePax(pax.id, 'passportExpiry', v)} placeholder="DD/MM/YYYY" />
                   </div>
                   <div className="pax-act">
                     {form.passengers.length > 1 && (

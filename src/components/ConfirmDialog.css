@@ -1,0 +1,178 @@
+/* ============================================
+   CONFIRM DIALOG — Styled modal
+   ============================================ */
+
+/* Overlay */
+.cd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: cd-fade-in 0.15s ease;
+}
+
+@keyframes cd-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cd-slide-in {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Box */
+.cd-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 28px 22px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 2px 12px rgba(0, 0, 0, 0.08);
+  animation: cd-slide-in 0.2s ease;
+}
+
+/* Icon */
+.cd-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-size: 22px;
+}
+
+.cd-icon-danger {
+  background: #FFE5E5;
+  color: #D63031;
+}
+
+.cd-icon-warning {
+  background: #FFF3E0;
+  color: #E17055;
+}
+
+.cd-icon-info {
+  background: #E8F4F8;
+  color: #2E86AB;
+}
+
+/* Title */
+.cd-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1B3A5C;
+  margin: 0 0 6px;
+}
+
+/* Message */
+.cd-message {
+  font-size: 13px;
+  color: #636E72;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+/* Actions */
+.cd-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cd-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  outline: none;
+}
+
+.cd-btn:active {
+  transform: scale(0.97);
+}
+
+/* Cancel */
+.cd-cancel {
+  background: #F0F2F5;
+  color: #636E72;
+}
+
+.cd-cancel:hover {
+  background: #E4E8EC;
+  color: #2D3436;
+}
+
+/* Confirm variants */
+.cd-confirm-danger {
+  background: #D63031;
+  color: #fff;
+}
+
+.cd-confirm-danger:hover {
+  background: #C0392B;
+}
+
+.cd-confirm-warning {
+  background: #E17055;
+  color: #fff;
+}
+
+.cd-confirm-warning:hover {
+  background: #D35400;
+}
+
+.cd-confirm-info {
+  background: #2E86AB;
+  color: #fff;
+}
+
+.cd-confirm-info:hover {
+  background: #1B6D8A;
+}
+
+/* Focus ring */
+.cd-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 450px) {
+  .cd-box {
+    padding: 22px 18px 18px;
+    border-radius: 14px;
+  }
+
+  .cd-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .cd-title {
+    font-size: 15px;
+  }
+
+  .cd-message {
+    font-size: 12.5px;
+  }
+
+  .cd-btn {
+    padding: 9px 12px;
+    font-size: 12.5px;
+  }
+}

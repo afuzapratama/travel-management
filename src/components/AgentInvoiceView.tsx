@@ -16,6 +16,8 @@ import { formatDateSlash } from '../utils/formatDate';
 import { exportToPDF } from '../utils/exportPdf';
 import { searchAirports, getAirportByCode, type Airport } from '../data/airports';
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
+import DateInput from './DateInput';
+import './DateInput.css';
 import '../components/InvoicePreview.css';
 import './AdminInvoiceView.css';
 
@@ -603,8 +605,8 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
                 </div>
                 <div className="fi">
                   <label>Tanggal Berangkat</label>
-                  <input type="date" value={editForm.flight.departureDate}
-                    onChange={e => uf('departureDate', e.target.value)} />
+                  <DateInput value={editForm.flight.departureDate}
+                    onChange={v => uf('departureDate', v)} />
                 </div>
                 <div className="fi full ac-wrap" ref={acField === 'from' ? acRef : undefined}>
                   <label>Bandara Asal</label>
@@ -828,16 +830,16 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
                     )}
                   </div>
                   <div className="pax-cell" data-label="Tgl Lahir">
-                    <input type="date" value={pax.dob}
-                      onChange={e => up(pax.id, 'dob', e.target.value)} />
+                    <DateInput value={pax.dob}
+                      onChange={v => up(pax.id, 'dob', v)} placeholder="DD/MM/YYYY" />
                   </div>
                   <div className="pax-cell" data-label="No. Paspor">
                     <input type="text" placeholder="A12345678" value={pax.passport}
                       onChange={e => up(pax.id, 'passport', e.target.value.toUpperCase())} />
                   </div>
                   <div className="pax-cell" data-label="Expired Paspor">
-                    <input type="date" value={pax.passportExpiry}
-                      onChange={e => up(pax.id, 'passportExpiry', e.target.value)} />
+                    <DateInput value={pax.passportExpiry}
+                      onChange={v => up(pax.id, 'passportExpiry', v)} placeholder="DD/MM/YYYY" />
                   </div>
                   <div className="pax-act">
                     {editForm.passengers.length > 1 && (
@@ -882,9 +884,6 @@ export default function AgentInvoiceView({ bookingId, onBack }: Props) {
               <i className="fa-solid fa-pen-to-square"></i> Edit
             </button>
           )}
-          <button className="aiv-btn secondary" onClick={() => window.print()}>
-            <i className="fa-solid fa-print"></i> Print
-          </button>
           <button className="aiv-btn primary" onClick={handleExport} disabled={exporting}>
             {exporting ? <><i className="fa-solid fa-spinner fa-spin"></i> PDF...</> :
               <><i className="fa-solid fa-file-pdf"></i> Export PDF</>}

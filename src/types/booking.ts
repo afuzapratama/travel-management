@@ -79,6 +79,7 @@ export interface Booking {
   hideHarga: boolean;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 // ===== DEFAULTS =====

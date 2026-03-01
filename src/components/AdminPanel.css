@@ -132,6 +132,15 @@
 .act-btn.del { color: #B2BEC3; }
 .act-btn.del:hover { background: #FFE5E5; border-color: #D63031; color: #D63031; }
 
+.act-btn.restore { color: #00B894; }
+.act-btn.restore:hover { background: #E6FBF5; border-color: #00B894; }
+
+/* Trash Tab */
+.trash-row { opacity: 0.85; }
+.trash-row:hover { opacity: 1; }
+
+.tab-badge.trash-badge { background: #D63031; }
+
 /* Info Bar */
 .admin-info-bar {
   max-width: 1200px;

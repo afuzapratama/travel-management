@@ -289,12 +289,13 @@ function rowToBooking(row: any, paxRows: any[]): Booking {
     hideHarga: row.hide_harga === true,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    deletedAt: (row.deleted_at as string) || null,
   };
 }
 
-/** Fetch all bookings (optionally filtered by agent) */
+/** Fetch all bookings (optionally filtered by agent, excludes soft-deleted) */
 export async function fetchBookings(agentId?: string): Promise<Booking[]> {
-  let query = supabase.from('bookings').select('*').order('created_at', { ascending: false });
+  let query = supabase.from('bookings').select('*').is('deleted_at', null).order('created_at', { ascending: false });
   if (agentId) {
     query = query.eq('agent_id', agentId);
   }
@@ -386,9 +387,10 @@ export async function createBooking(booking: Booking): Promise<Booking> {
 
   if (error) throw error;
 
-  // Insert passengers
-  if (booking.passengers.length > 0) {
-    const paxInserts = booking.passengers.map((p, i) => ({
+  // Insert passengers (only those with a name filled in)
+  const filledPassengers = booking.passengers.filter(p => p.name.trim());
+  if (filledPassengers.length > 0) {
+    const paxInserts = filledPassengers.map((p, i) => ({
       booking_id: row.id,
       title: p.title || 'MR',
       name: p.name,
@@ -454,11 +456,12 @@ export async function updateBookingInDb(booking: Booking): Promise<void> {
 
   if (error) throw error;
 
-  // Replace passengers: delete all then re-insert
+  // Replace passengers: delete all then re-insert (only filled ones)
   await supabase.from('passengers').delete().eq('booking_id', booking.id);
 
-  if (booking.passengers.length > 0) {
-    const paxInserts = booking.passengers.map((p, i) => ({
+  const filledPax = booking.passengers.filter(p => p.name.trim());
+  if (filledPax.length > 0) {
+    const paxInserts = filledPax.map((p, i) => ({
       booking_id: booking.id,
       title: p.title || 'MR',
       name: p.name,
@@ -475,8 +478,54 @@ export async function updateBookingInDb(booking: Booking): Promise<void> {
   }
 }
 
-/** Delete a booking (passengers cascade) */
+/** Soft-delete a booking (set deleted_at timestamp, data preserved) */
 export async function deleteBookingFromDb(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('bookings')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/** Restore a soft-deleted booking */
+export async function restoreBookingInDb(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('bookings')
+    .update({ deleted_at: null })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/** Permanently delete a booking (irreversible, passengers cascade) */
+export async function permanentDeleteBookingFromDb(id: string): Promise<void> {
   const { error } = await supabase.from('bookings').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** Fetch soft-deleted bookings (trash) */
+export async function fetchDeletedBookings(): Promise<Booking[]> {
+  const { data: rows, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
+  if (error) throw error;
+  if (!rows || rows.length === 0) return [];
+
+  const ids = rows.map(r => r.id);
+  const { data: paxRows, error: paxErr } = await supabase
+    .from('passengers')
+    .select('*')
+    .in('booking_id', ids)
+    .order('sort_order', { ascending: true });
+  if (paxErr) throw paxErr;
+
+  const paxMap = new Map<string, Record<string, unknown>[]>();
+  for (const p of (paxRows || [])) {
+    const list = paxMap.get(p.booking_id) || [];
+    list.push(p);
+    paxMap.set(p.booking_id, list);
+  }
+
+  return rows.map(r => rowToBooking(r, paxMap.get(r.id) || []));
 }

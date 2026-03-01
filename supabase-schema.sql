@@ -168,4 +168,4 @@ CREATE TRIGGER set_updated_at_company_settings BEFORE UPDATE ON company_settings
 ALTER TABLE bookings RENAME COLUMN service_fee TO price_per_pax;
 ALTER TABLE passengers RENAME COLUMN booking_ref TO pnr;
 ALTER TABLE passengers ADD COLUMN IF NOT EXISTS e_ticket_number TEXT NOT NULL DEFAULT '';
-ALTER TABLE passengers DROP COLUMN IF EXISTS price;
+ALTER TABLE passengers DROP COLUMN IF EXISTS price;\n\n-- ===== MIGRATION: Soft-delete support =====\nALTER TABLE bookings ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;\nCREATE INDEX IF NOT EXISTS idx_bookings_deleted ON bookings(deleted_at);

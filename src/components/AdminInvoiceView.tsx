@@ -11,6 +11,8 @@ import { formatRupiah, parseRupiahInput } from '../utils/formatCurrency';
 import { terbilang } from '../utils/terbilang';
 import { formatDateSlash } from '../utils/formatDate';
 import { exportToPDF } from '../utils/exportPdf';
+import DateInput from './DateInput';
+import './DateInput.css';
 import '../components/InvoicePreview.css';
 import './AdminInvoiceView.css';
 
@@ -284,9 +286,6 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
             <i className={`fa-solid ${showHarga ? 'fa-eye' : 'fa-eye-slash'}`}></i> Harga
           </button>
           <span className="aiv-separator"></span>
-          <button className="aiv-btn secondary" onClick={() => window.print()}>
-            <i className="fa-solid fa-print"></i> Print
-          </button>
           <button className="aiv-btn primary" onClick={handleExport} disabled={exporting}>
             {exporting ? <><i className="fa-solid fa-spinner fa-spin"></i> PDF...</> :
               <><i className="fa-solid fa-file-pdf"></i> Export PDF</>}
@@ -344,7 +343,7 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
               </div>
               <div className="meta-row">
                 <span className="label">Jatuh Tempo</span>
-                <span className="value"><E value={booking.invoice.dueDate} onChange={v => uInv('dueDate', v)} type="date" placeholder="Isi tanggal..." displayValue={booking.invoice.dueDate ? formatDateSlash(booking.invoice.dueDate) : ''} /></span>
+                <span className="value"><DateInput value={booking.invoice.dueDate} onChange={v => uInv('dueDate', v)} placeholder="DD/MM/YYYY" className="admin-date-input" /></span>
               </div>
               <div className="meta-row">
                 <span className="label">No. PO</span>

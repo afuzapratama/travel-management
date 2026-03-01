@@ -11,6 +11,7 @@ import {
   getAllAgents, createAgent, updateAgent, deleteAgent,
   getCompanySettings, updateCompanySettings,
 } from '../lib/supabaseService';
+import { useConfirm } from './ConfirmDialog';
 import './AdminSettings.css';
 
 export default function AdminSettings() {
@@ -35,6 +36,7 @@ export default function AdminSettings() {
   // Company settings (logo & TTD)
   const [companyLogo, setCompanyLogo] = useState('');
   const [companySignature, setCompanySignature] = useState('');
+  const confirm = useConfirm();
   const [companySaving, setCompanySaving] = useState(false);
 
   // ===== LOAD DATA =====
@@ -95,7 +97,14 @@ export default function AdminSettings() {
   };
 
   const handleCompanyDelete = async (field: 'logo' | 'signature') => {
-    if (!confirm(`Hapus ${field === 'logo' ? 'logo' : 'tanda tangan'}?`)) return;
+    const ok = await confirm({
+      title: 'Hapus Gambar',
+      message: `Hapus ${field === 'logo' ? 'logo perusahaan' : 'tanda tangan'}?`,
+      confirmText: 'Ya, Hapus',
+      variant: 'warning',
+      icon: 'fa-image'
+    });
+    if (!ok) return;
     const prev = field === 'logo' ? companyLogo : companySignature;
     if (field === 'logo') setCompanyLogo('');
     else setCompanySignature('');
@@ -137,7 +146,14 @@ export default function AdminSettings() {
   };
 
   const handleDeleteKey = async (key: AccessKey) => {
-    if (!confirm(`Hapus key "${key.label}"?`)) return;
+    const ok = await confirm({
+      title: 'Hapus Access Key',
+      message: `Hapus key "${key.label}"?`,
+      confirmText: 'Ya, Hapus',
+      variant: 'danger',
+      icon: 'fa-key'
+    });
+    if (!ok) return;
     try {
       await deleteKey(key.id);
       await loadData();
@@ -197,7 +213,14 @@ export default function AdminSettings() {
   };
 
   const handleDeleteAgent = async (agent: Agent) => {
-    if (!confirm(`Hapus agent "${agent.name}"?`)) return;
+    const ok = await confirm({
+      title: 'Hapus Agent',
+      message: `Hapus agent "${agent.name}"?`,
+      confirmText: 'Ya, Hapus',
+      variant: 'danger',
+      icon: 'fa-user-xmark'
+    });
+    if (!ok) return;
     try {
       await deleteAgent(agent.id);
       await loadData();

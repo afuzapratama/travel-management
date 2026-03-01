@@ -10,9 +10,10 @@ import { formatDateSlash } from '../utils/formatDate';
 import { formatRupiah } from '../utils/formatCurrency';
 import AdminInvoiceView from './AdminInvoiceView';
 import AdminSettings from './AdminSettings';
+import { useConfirm } from './ConfirmDialog';
 import './AdminPanel.css';
 
-type Tab = 'request' | 'active' | 'all' | 'settings';
+type Tab = 'request' | 'active' | 'all' | 'settings' | 'trash';
 
 // Persist admin navigation state
 const NAV_KEY = 'gtmg_admin_nav';
@@ -25,7 +26,8 @@ function loadNav(): { tab: Tab; viewId: string | null } {
 }
 
 export default function AdminPanel() {
-  const { bookings, deleteBooking, logout, loading } = useApp();
+  const { bookings, deleteBooking, deletedBookings, restoreBooking, permanentDeleteBooking, logout, loading } = useApp();
+  const confirm = useConfirm();
   const savedNav = loadNav();
   const [tab, _setTab] = useState<Tab>(savedNav.tab);
   const [viewId, _setViewId] = useState<string | null>(savedNav.viewId);
@@ -49,7 +51,8 @@ export default function AdminPanel() {
     confirmed: bookings.filter(b => b.status === 'confirmed').length,
     completed: bookings.filter(b => b.status === 'completed').length,
     total: bookings.length,
-  }), [bookings]);
+    trash: deletedBookings.length,
+  }), [bookings, deletedBookings]);
 
   const filtered = useMemo(() => {
     switch (tab) {
@@ -125,6 +128,10 @@ export default function AdminPanel() {
         <button className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>
           <i className="fa-solid fa-gear"></i> Pengaturan
         </button>
+        <button className={tab === 'trash' ? 'active' : ''} onClick={() => setTab('trash')}>
+          <i className="fa-solid fa-trash-can"></i> Sampah
+          {counts.trash > 0 && <span className="tab-badge trash-badge">{counts.trash}</span>}
+        </button>
       </div>
 
       {/* Stats */}
@@ -151,6 +158,81 @@ export default function AdminPanel() {
       <div className="admin-content">
         {tab === 'settings' ? (
           <AdminSettings />
+        ) : tab === 'trash' ? (
+          /* ===== TRASH TAB ===== */
+          deletedBookings.length === 0 ? (
+            <div className="empty-state">
+              <i className="fa-solid fa-trash-can"></i>
+              <p>Sampah kosong</p>
+              <span style={{ fontSize: 12, color: '#B2BEC3' }}>Booking yang dihapus akan muncul di sini dan bisa di-restore</span>
+            </div>
+          ) : (
+            <>
+            <div className="admin-info-bar">
+              <span><i className="fa-solid fa-circle-info"></i> {deletedBookings.length} booking di sampah — data aman, bisa di-restore kapan saja</span>
+            </div>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '4%' }}>#</th>
+                    <th style={{ width: '14%' }}>Dihapus</th>
+                    <th style={{ width: '18%' }}>Pelanggan</th>
+                    <th style={{ width: '12%' }}>Rute</th>
+                    <th style={{ width: '8%' }}>Flight</th>
+                    <th style={{ width: '6%' }}>Pax</th>
+                    <th style={{ width: '10%' }}>Status</th>
+                    <th style={{ width: '12%' }}>Invoice</th>
+                    <th style={{ width: '16%' }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deletedBookings.map((b, i) => (
+                    <tr key={b.id} className="trash-row">
+                      <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                      <td>
+                        <span style={{ fontSize: 11, color: '#D63031', fontWeight: 500 }}>
+                          {b.deletedAt ? new Date(b.deletedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                        </span>
+                      </td>
+                      <td><strong>{b.billTo.name || '—'}</strong></td>
+                      <td><span className="route-tag-sm">{b.flight.routeFrom} → {b.flight.routeTo}</span></td>
+                      <td><span className="flight-tag">{b.flight.flightNumber}</span></td>
+                      <td style={{ textAlign: 'center' }}><strong>{b.passengers.length}</strong></td>
+                      <td><span className={`badge ${b.status}`}><i className={`fa-solid ${b.status === 'pending' ? 'fa-clock' : b.status === 'confirmed' ? 'fa-plane' : b.status === 'completed' ? 'fa-circle-check' : 'fa-circle-xmark'}`}></i> {statusLabel[b.status]}</span></td>
+                      <td>
+                        <span style={{ fontSize: 11, color: b.invoice.invoiceNumber ? '#1B3A5C' : '#B2BEC3', fontWeight: 600 }}>
+                          {b.invoice.invoiceNumber || '—'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="row-actions">
+                          <button className="act-btn restore" onClick={async () => {
+                            await restoreBooking(b.id);
+                          }} title="Restore">
+                            <i className="fa-solid fa-rotate-left"></i>
+                          </button>
+                          <button className="act-btn del" onClick={async () => {
+                            const ok = await confirm({
+                              title: 'Hapus Permanen',
+                              message: `Hapus permanen booking ${b.billTo.name}? Data tidak bisa dikembalikan lagi!`,
+                              confirmText: 'Ya, Hapus Permanen',
+                              variant: 'danger',
+                              icon: 'fa-trash-can'
+                            });
+                            if (ok) await permanentDeleteBooking(b.id);
+                          }} title="Hapus Permanen">
+                            <i className="fa-solid fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            </>
+          )
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <i className="fa-solid fa-inbox"></i>
@@ -216,7 +298,14 @@ export default function AdminPanel() {
                           <i className="fa-solid fa-pen-to-square"></i>
                         </button>
                         <button className="act-btn del" onClick={async () => {
-                          if (confirm(`Hapus booking ${b.billTo.name}?`)) await deleteBooking(b.id);
+                          const ok = await confirm({
+                            title: 'Hapus Booking',
+                            message: `Hapus booking ${b.billTo.name}?`,
+                            confirmText: 'Ya, Hapus',
+                            variant: 'danger',
+                            icon: 'fa-trash-can'
+                          });
+                          if (ok) await deleteBooking(b.id);
                         }} title="Hapus">
                           <i className="fa-solid fa-trash"></i>
                         </button>
@@ -297,6 +386,11 @@ export default function AdminPanel() {
         <button className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>
           <i className="fa-solid fa-gear"></i>
           <span>Setting</span>
+        </button>
+        <button className={`${tab === 'trash' ? 'active' : ''} ${counts.trash > 0 ? 'has-trash' : ''}`} onClick={() => setTab('trash')}>
+          <i className="fa-solid fa-trash-can"></i>
+          <span>Sampah</span>
+          {counts.trash > 0 && <span className="bnav-badge">{counts.trash}</span>}
         </button>
         <button className="bnav-logout" onClick={logout}>
           <i className="fa-solid fa-right-from-bracket"></i>

@@ -359,6 +359,64 @@
   min-width: 130px;
 }
 
+/* Admin inline DateInput — blends into invoice meta row */
+.admin-date-input {
+  display: inline-flex !important;
+  width: auto !important;
+  justify-content: flex-end;
+}
+
+.admin-date-input .date-input-text {
+  border: 1.5px solid transparent;
+  border-radius: 5px;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1B3A5C;
+  min-width: 82px;
+  max-width: 100px;
+  background: transparent;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  text-align: right;
+}
+
+.admin-date-input .date-input-text:hover {
+  border-color: #DFE6E9;
+  background: #F8FAFE;
+}
+
+.admin-date-input .date-input-text:focus {
+  border-color: #2E86AB;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(46, 134, 171, 0.12);
+  cursor: text;
+}
+
+.admin-date-input .date-input-text::placeholder {
+  color: #B2BEC3;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.admin-date-input .date-input-cal {
+  font-size: 10px;
+  right: -16px;
+  color: #B2BEC3;
+  opacity: 0;
+  transition: opacity 0.2s;
+  padding: 2px 3px;
+}
+
+.admin-date-input:hover .date-input-cal,
+.admin-date-input .date-input-text:focus ~ .date-input-hidden ~ .date-input-cal,
+.admin-date-input:focus-within .date-input-cal {
+  opacity: 1;
+  color: #2E86AB;
+}
+
 /* Invoice number edit */
 .inv-num-edit {
   font-size: 13px;
@@ -626,6 +684,79 @@
   .cf:hover { background: none !important; border-bottom-color: transparent !important; }
   .cf-toast { display: none !important; }
   .flight-info-bar { border-color: #ccc; }
+}
+
+/* ===== PDF EXPORT — Clean invoice for html2canvas ===== */
+.invoice-page.pdf-export .ef {
+  border-bottom: none !important;
+  background: none !important;
+  cursor: default !important;
+  padding: 0 !important;
+}
+.invoice-page.pdf-export .ef:hover {
+  border-bottom: none !important;
+  background: none !important;
+}
+.invoice-page.pdf-export .ef.empty {
+  color: transparent !important;
+  font-style: normal !important;
+}
+.invoice-page.pdf-export .ei {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+.invoice-page.pdf-export .cf {
+  border-bottom: none !important;
+  cursor: default !important;
+  padding: 0 !important;
+}
+.invoice-page.pdf-export .cf:hover {
+  background: none !important;
+  border-bottom-color: transparent !important;
+}
+.invoice-page.pdf-export .cf-toast {
+  display: none !important;
+}
+.invoice-page.pdf-export .ef-select {
+  cursor: default !important;
+}
+.invoice-page.pdf-export .ef-dropdown {
+  display: none !important;
+}
+.invoice-page.pdf-export .admin-date-input .date-input-text {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  cursor: default !important;
+}
+.invoice-page.pdf-export .admin-date-input .date-input-cal {
+  display: none !important;
+}
+.invoice-page.pdf-export .admin-date-input .date-input-hidden {
+  display: none !important;
+}
+.invoice-page.pdf-export .agent-add-pax-btn,
+.invoice-page.pdf-export .pax-del-btn,
+.invoice-page.pdf-export .pax-edit-row,
+.invoice-page.pdf-export .agent-notes-edit {
+  display: none !important;
+}
+.invoice-page.pdf-export .flight-info-bar {
+  border-color: #ccc;
+}
+/* PDF text rendering — force crisp fonts */
+.invoice-page.pdf-export {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  image-rendering: -webkit-optimize-contrast;
+}
+.invoice-page.pdf-export * {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* ===== RESPONSIVE ===== */
