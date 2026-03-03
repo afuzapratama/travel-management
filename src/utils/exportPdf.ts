@@ -6,10 +6,14 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-export async function exportToPDF(
+/**
+ * Core PDF generation — returns { pdf, safeName } without saving.
+ * Used by both exportToPDF (download) and generatePDFBlob (email/share).
+ */
+async function buildPDF(
   element: HTMLElement,
   filename?: string
-): Promise<void> {
+): Promise<{ pdf: jsPDF; safeName: string }> {
   // Save original styles
   const originalWidth = element.style.width;
   const originalMaxWidth = element.style.maxWidth;
@@ -68,7 +72,8 @@ export async function exportToPDF(
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
     const safeName = filename || `Invoice_TiketPesawat_${dateStr}`;
-    pdf.save(`${safeName}.pdf`);
+
+    return { pdf, safeName };
   } finally {
     // Restore original styles + remove cleanup class
     element.classList.remove('pdf-export');
@@ -78,4 +83,27 @@ export async function exportToPDF(
     element.style.boxShadow = originalBoxShadow;
     element.style.overflow = originalOverflow;
   }
+}
+
+/**
+ * Export PDF and trigger browser download.
+ */
+export async function exportToPDF(
+  element: HTMLElement,
+  filename?: string
+): Promise<void> {
+  const { pdf, safeName } = await buildPDF(element, filename);
+  pdf.save(`${safeName}.pdf`);
+}
+
+/**
+ * Generate PDF and return as Blob + filename (for email attachment / share).
+ */
+export async function generatePDFBlob(
+  element: HTMLElement,
+  filename?: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const { pdf, safeName } = await buildPDF(element, filename);
+  const blob = pdf.output('blob');
+  return { blob, fileName: `${safeName}.pdf` };
 }

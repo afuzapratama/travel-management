@@ -12,6 +12,7 @@ import { terbilang } from '../utils/terbilang';
 import { formatDateSlash } from '../utils/formatDate';
 import { exportToPDF } from '../utils/exportPdf';
 import DateInput from './DateInput';
+import ShareInvoiceModal from './ShareInvoiceModal';
 import './DateInput.css';
 import '../components/InvoicePreview.css';
 import './AdminInvoiceView.css';
@@ -153,6 +154,7 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
   const [booking, setBooking] = useState<Booking>(() => bookings.find(b => b.id === bookingId)!);
   const [exporting, setExporting] = useState(false);
   const [showNote, setShowNote] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const invoiceRef = useRef<HTMLDivElement>(null);
   const noteRef = useRef<HTMLDivElement>(null);
 
@@ -290,8 +292,20 @@ export default function AdminInvoiceView({ bookingId, onBack }: Props) {
             {exporting ? <><i className="fa-solid fa-spinner fa-spin"></i> PDF...</> :
               <><i className="fa-solid fa-file-pdf"></i> Export PDF</>}
           </button>
+          <button className="aiv-btn share" onClick={() => setShowShare(true)}>
+            <i className="fa-solid fa-share-nodes"></i> Kirim
+          </button>
         </div>
       </div>
+
+      {/* ===== SHARE MODAL ===== */}
+      {showShare && (
+        <ShareInvoiceModal
+          booking={booking}
+          invoiceRef={invoiceRef}
+          onClose={() => setShowShare(false)}
+        />
+      )}
 
       {/* ===== INVOICE PAGE ===== */}
       <div className="aiv-preview-area">

@@ -180,6 +180,15 @@
   cursor: not-allowed;
 }
 
+.aiv-btn.share {
+  background: linear-gradient(135deg, #2E86AB, #1a6b8a);
+  color: #fff;
+}
+
+.aiv-btn.share:hover {
+  opacity: 0.9;
+}
+
 .aiv-btn.warning {
   background: linear-gradient(135deg, #FDCB6E, #F39C12);
   color: #2D3436;

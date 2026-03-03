@@ -1,0 +1,199 @@
+# ============================================
+# VPS Docker Compose — WhatsApp Automation
+# Evolution API + n8n + Nginx + SSL
+# Domain: gtmgroup.co.id
+# ============================================
+# Subdomains:
+#   wa.gtmgroup.co.id  → Evolution API
+#   n8n.gtmgroup.co.id → n8n
+# ============================================
+
+services:
+  # ---------- PostgreSQL (n8n database) ----------
+  postgres:
+    image: postgres:16-alpine
+    container_name: wa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-n8n}
+      POSTGRES_USER: ${POSTGRES_USER:-n8n}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8n_secret_change_me}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Redis (Evolution API cache) ----------
+  redis:
+    image: redis:7-alpine
+    container_name: wa-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------- Evolution API (WhatsApp Gateway) ----------
+  # Custom image dengan proxychains-ng → route SEMUA traffic via WARP SOCKS5
+  # Baileys built-in proxy hanya wrap koneksi awal, BUKAN keep-alive packets
+  # proxychains intercept semua socket calls (termasuk WebSocket keep-alive)
+  evolution-api:
+    build: ./evolution-proxy
+    container_name: wa-evolution
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    network_mode: host
+    environment:
+      # Server — port 8080 langsung di host
+      SERVER_URL: ${EVOLUTION_SERVER_URL:-https://wa.gtmgroup.co.id}
+      SERVER_PORT: 8080
+      DEL_INSTANCE: "false"
+
+      # Authentication
+      AUTHENTICATION_TYPE: apikey
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-evo_api_key_change_me}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "true"
+
+      # Database — PostgreSQL (pakai 127.0.0.1 karena host network)
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-n8n}:${POSTGRES_PASSWORD:-n8n_secret_change_me}@127.0.0.1:5432/${POSTGRES_DB:-n8n}
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      DATABASE_SAVE_MESSAGE_UPDATE: "true"
+      DATABASE_SAVE_DATA_CONTACTS: "true"
+      DATABASE_SAVE_DATA_CHATS: "true"
+      DATABASE_SAVE_DATA_LABELS: "true"
+
+      # Cache — Redis (pakai 127.0.0.1 karena host network)
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://127.0.0.1:6379/0
+      CACHE_LOCAL_ENABLED: "false"
+
+      # Storage
+      S3_ENABLED: "false"
+
+      # Proxychains — route semua traffic via Cloudflare WARP
+      # WARP harus sudah running di host (warp-cli mode proxy)
+      PC_PROXY_HOST: "127.0.0.1"
+      PC_PROXY_PORT: "40000"
+      PC_PROXY_TYPE: "socks5"
+
+      # WhatsApp Web version — WAJIB di-set jika VPS blokir WhatsApp
+      # Karena fetchLatestWaWebVersion() tidak bisa fetch web.whatsapp.com/sw.js
+      # Cek versi terbaru: curl -s --proxy socks5h://127.0.0.1:40000 https://web.whatsapp.com/sw.js | grep -oP 'client_revision":\K[0-9]+'
+      WEB_VERSION: "2.3000.1034302344"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1034302344"
+      CONFIG_SESSION_PHONE_CLIENT: "Evolution API"
+      CONFIG_SESSION_PHONE_NAME: "Chrome"
+
+      # Logging
+      LOG_LEVEL: INFO
+    volumes:
+      - evolution_data:/evolution/instances
+      - evolution_media:/evolution/media
+
+  # ---------- n8n (Workflow Automation) ----------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: wa-n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "5678"
+    environment:
+      # Evolution API (host network, reachable via host.docker.internal)
+      EVOLUTION_API_URL: http://host.docker.internal:8080
+      EVOLUTION_INSTANCE: invoice-bot
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-evo_api_key_change_me}
+      # Database
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-n8n}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-n8n}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-n8n_secret_change_me}
+
+      # n8n config
+      N8N_HOST: 0.0.0.0
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.gtmgroup.co.id}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-https://n8n.gtmgroup.co.id}
+
+      # Security
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD:-admin_change_me}
+
+      # Timezone
+      GENERIC_TIMEZONE: ${TIMEZONE:-Asia/Jakarta}
+      TZ: ${TIMEZONE:-Asia/Jakarta}
+
+      # Behind reverse proxy
+      N8N_SECURE_COOKIE: "false"
+      N8N_TRUST_PROXY: "true"
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  # ---------- Nginx Reverse Proxy + SSL ----------
+  nginx:
+    image: nginx:alpine
+    container_name: wa-nginx
+    restart: unless-stopped
+    depends_on:
+      - n8n
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_webroot:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ---------- Certbot (SSL certificates) ----------
+  # Certbot is run on-demand, not always-running.
+  # Request:  docker compose run --rm certbot certonly --webroot ...
+  # Renewal:  handled by cron job (installed by setup.sh)
+  certbot:
+    image: certbot/certbot:latest
+    container_name: wa-certbot
+    restart: "no"
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+
+volumes:
+  postgres_data:
+  redis_data:
+  evolution_data:
+  evolution_media:
+  n8n_data:
+  certbot_webroot:
+  certbot_certs:

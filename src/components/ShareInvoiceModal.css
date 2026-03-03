@@ -1,0 +1,309 @@
+/* ============================================
+   SHARE INVOICE MODAL
+   ============================================ */
+
+/* Overlay */
+.sim-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: simFadeIn 0.2s ease;
+}
+
+@keyframes simFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal */
+.sim-modal {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: simSlideUp 0.25s ease;
+}
+
+@keyframes simSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header */
+.sim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sim-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1a2332;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s;
+}
+
+.sim-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Tabs */
+.sim-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sim-tab {
+  flex: 1;
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.sim-tab:hover {
+  color: #555;
+  background: #fafafa;
+}
+
+.sim-tab.active {
+  color: #1a2332;
+  border-bottom-color: #2E86AB;
+}
+
+.sim-tab.active .fa-whatsapp {
+  color: #25D366;
+}
+
+.sim-tab.active .fa-envelope {
+  color: #2E86AB;
+}
+
+/* Body */
+.sim-body {
+  padding: 20px 24px;
+}
+
+.sim-field {
+  margin-bottom: 16px;
+}
+
+.sim-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.sim-field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.sim-field input:focus {
+  border-color: #2E86AB;
+}
+
+/* Preview */
+.sim-preview {
+  margin-bottom: 16px;
+}
+
+.sim-preview label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.sim-preview pre {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 12px;
+  color: #555;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  border: 1px solid #eee;
+}
+
+/* Info */
+.sim-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+  background: #f8f9fa;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.sim-info i {
+  color: #2E86AB;
+  margin-top: 1px;
+}
+
+/* Result */
+.sim-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 12px;
+  animation: simFadeIn 0.2s ease;
+}
+
+.sim-result.success {
+  background: #E6F9F0;
+  color: #00875A;
+}
+
+.sim-result.error {
+  background: #FFF0F0;
+  color: #D63031;
+}
+
+/* Footer / Actions */
+.sim-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #f0f0f0;
+  justify-content: flex-end;
+}
+
+.sim-btn {
+  padding: 11px 22px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.sim-btn.cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.sim-btn.cancel:hover {
+  background: #e4e4e4;
+}
+
+.sim-btn.send {
+  color: #fff;
+}
+
+.sim-btn.send.email {
+  background: #2E86AB;
+}
+
+.sim-btn.send.email:hover {
+  background: #256d8c;
+}
+
+.sim-btn.send.whatsapp {
+  background: #25D366;
+}
+
+.sim-btn.send.whatsapp:hover {
+  background: #1fb855;
+}
+
+.sim-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 500px) {
+  .sim-modal {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    max-height: 85vh;
+  }
+
+  .sim-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .sim-header {
+    padding: 16px 20px 12px;
+  }
+
+  .sim-tabs {
+    padding: 0 20px;
+  }
+
+  .sim-body {
+    padding: 16px 20px;
+  }
+
+  .sim-footer {
+    padding: 12px 20px 16px;
+  }
+
+  .sim-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

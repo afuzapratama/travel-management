@@ -1,0 +1,208 @@
+{
+  "name": "WhatsApp Invoice Sender",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-invoice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/message/sendText/invoice-bot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Webhook').item.json.body.phone, text: $('Webhook').item.json.body.message }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "send-text",
+      "name": "Send Text Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Evolution API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-pdf",
+              "leftValue": "={{ $('Webhook').item.json.body.pdfBase64 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-pdf",
+      "name": "Has PDF?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/message/sendMedia/invoice-bot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ number: $('Webhook').item.json.body.phone, mediatype: 'document', media: $('Webhook').item.json.body.pdfBase64, fileName: $('Webhook').item.json.body.fileName || 'Invoice.pdf' }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "send-pdf",
+      "name": "Send PDF Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Evolution API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'WhatsApp sent with PDF' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "response-with-pdf",
+      "name": "Response (with PDF)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'WhatsApp text sent' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "response-text-only",
+      "name": "Response (text only)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [950, 450]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Text Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Text Message": {
+      "main": [
+        [
+          {
+            "node": "Has PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has PDF?": {
+      "main": [
+        [
+          {
+            "node": "Send PDF Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response (text only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send PDF Document": {
+      "main": [
+        [
+          {
+            "node": "Response (with PDF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    {
+      "name": "WhatsApp",
+      "id": "wa-tag"
+    }
+  ]
+}

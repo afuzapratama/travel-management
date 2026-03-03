@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:email": "cd server && node --watch index.js",
+    "dev:all": "npx concurrently \"vite\" \"cd server && node --watch index.js\"",
+    "mailpit": "docker compose up -d mailpit",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
