@@ -161,6 +161,19 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
 
+  # ---------- Email API Server (Resend) ----------
+  email-server:
+    build: ./server
+    container_name: wa-email
+    restart: unless-stopped
+    environment:
+      EMAIL_PROVIDER: resend
+      RESEND_API_KEY: ${RESEND_API_KEY:-re_xxx}
+      RESEND_FROM: "PT Global Teknik Multi Guna <noreply@invoice.gtmgroup.co.id>"
+      PORT: 3001
+    ports:
+      - "127.0.0.1:3001:3001"
+
   # ---------- Nginx Reverse Proxy + SSL ----------
   nginx:
     image: nginx:alpine
@@ -168,6 +181,7 @@ services:
     restart: unless-stopped
     depends_on:
       - n8n
+      - email-server
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
