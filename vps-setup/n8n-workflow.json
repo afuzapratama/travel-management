@@ -1,5 +1,5 @@
 {
-  "name": "WhatsApp Invoice Sender",
+  "name": "WhatsApp Invoice Sender (Rotating)",
   "nodes": [
     {
       "parameters": {
@@ -16,193 +16,100 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:8080/message/sendText/invoice-bot",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $('Webhook').item.json.body.phone, text: $('Webhook').item.json.body.message }) }}",
-        "options": {
-          "timeout": 30000
-        }
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================\n// ROTATE & SEND TEXT — Auto-Discovery + Failover\n// ============================================\n// Uses require('http') — n8n sandbox has no global fetch/URL\n// ============================================\n\nconst http = require('http');\n\n// --- CONFIG ---\nconst EVO_HOST = 'host.docker.internal';\nconst EVO_PORT = 8080;\nconst EVO_API_KEY = 'fa67ff482194dac60c4ffa0733a83d43cc540ce9';\n// --- END CONFIG ---\n\nfunction httpReq(path, method, headers, body) {\n  return new Promise((resolve, reject) => {\n    const opts = {\n      hostname: EVO_HOST, port: EVO_PORT,\n      path: path, method: method || 'GET',\n      headers: headers || {}\n    };\n    const req = http.request(opts, res => {\n      let data = '';\n      res.on('data', c => data += c);\n      res.on('end', () => {\n        let json;\n        try { json = JSON.parse(data); } catch (e) { json = {}; }\n        resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, statusText: res.statusMessage, data: json });\n      });\n    });\n    req.on('error', reject);\n    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));\n    req.end();\n  });\n}\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;\nconst phone = body.phone;\nconst message = body.message;\n\n// 1. Fetch semua instance (auto-discovery)\nlet instancesRaw;\ntry {\n  const res = await httpReq('/instance/fetchInstances', 'GET', { 'apikey': EVO_API_KEY });\n  instancesRaw = res.data;\n} catch (err) {\n  return [{ json: {\n    success: false,\n    error: 'Gagal connect ke Evolution API: ' + String(err.message || err),\n    instanceUsed: null, connectedInstances: [], totalInstances: 0\n  }}];\n}\n\n// 2. Filter connected instances\nconst connected = [];\nif (Array.isArray(instancesRaw)) {\n  for (const inst of instancesRaw) {\n    const name = inst.name || (inst.instance && inst.instance.instanceName) || inst.instanceName;\n    const status = inst.connectionStatus || (inst.instance && inst.instance.status) || inst.status;\n    if (status === 'open' && name) connected.push(name);\n  }\n}\n\nif (connected.length === 0) {\n  const total = Array.isArray(instancesRaw) ? instancesRaw.length : 0;\n  return [{ json: {\n    success: false,\n    error: 'Tidak ada WhatsApp instance yang terhubung (' + total + ' ditemukan). Scan QR dulu.',\n    instanceUsed: null, connectedInstances: [], totalInstances: 0\n  }}];\n}\n\n// 3. Round-robin\nconst staticData = $getWorkflowStaticData('global');\nconst lastIdx = typeof staticData.lastInstanceIndex === 'number' ? staticData.lastInstanceIndex : -1;\nconst startIdx = (lastIdx + 1) % connected.length;\n\n// 4. Send text with failover\nlet success = false;\nlet usedInstance = '';\nlet lastError = '';\nconst attempts = [];\n\nfor (let i = 0; i < connected.length; i++) {\n  const idx = (startIdx + i) % connected.length;\n  const instanceName = connected[idx];\n\n  try {\n    const sendRes = await httpReq(\n      '/message/sendText/' + instanceName,\n      'POST',\n      { 'Content-Type': 'application/json', 'apikey': EVO_API_KEY },\n      JSON.stringify({ number: phone, text: message })\n    );\n\n    if (sendRes.ok && !sendRes.data.error) {\n      success = true;\n      usedInstance = instanceName;\n      staticData.lastInstanceIndex = idx;\n      attempts.push({ instance: instanceName, status: 'ok' });\n      break;\n    } else {\n      const errMsg = sendRes.data.error || sendRes.data.message || sendRes.statusText;\n      attempts.push({ instance: instanceName, status: 'failed', error: errMsg });\n      lastError = instanceName + ': ' + errMsg;\n    }\n  } catch (err) {\n    const errMsg = String(err.message || err);\n    attempts.push({ instance: instanceName, status: 'error', error: errMsg });\n    lastError = instanceName + ': ' + errMsg;\n  }\n}\n\nif (!success) {\n  return [{ json: {\n    success: false,\n    error: 'Semua instance gagal (' + connected.length + ' dicoba). Error: ' + lastError,\n    attempts, connectedInstances: connected, totalInstances: connected.length, instanceUsed: null\n  }}];\n}\n\nreturn [{ json: {\n  success: true,\n  instanceUsed: usedInstance,\n  connectedInstances: connected,\n  totalInstances: connected.length,\n  attempts, phone,\n  pdfBase64: body.pdfBase64 || '',\n  fileName: body.fileName || ''\n}}];"
       },
-      "id": "send-text",
-      "name": "Send Text Message",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [450, 300],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Evolution API Key"
-        }
-      }
+      "id": "rotate-send-text",
+      "name": "Rotate & Send Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
     },
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose"
-          },
-          "conditions": [
-            {
-              "id": "check-pdf",
-              "leftValue": "={{ $('Webhook').item.json.body.pdfBase64 }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [{ "id": "check-success", "leftValue": "={{ $json.success }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true" } }],
           "combinator": "and"
         },
         "options": {}
       },
-      "id": "check-pdf",
-      "name": "Has PDF?",
+      "id": "check-result",
+      "name": "Berhasil?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [700, 300]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:8080/message/sendMedia/invoice-bot",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [{ "id": "check-pdf", "leftValue": "={{ $json.pdfBase64 }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }],
+          "combinator": "and"
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ number: $('Webhook').item.json.body.phone, mediatype: 'document', media: $('Webhook').item.json.body.pdfBase64, fileName: $('Webhook').item.json.body.fileName || 'Invoice.pdf' }) }}",
-        "options": {
-          "timeout": 60000
-        }
+        "options": {}
+      },
+      "id": "check-pdf",
+      "name": "Ada PDF?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [950, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================\n// SEND PDF — via instance yang berhasil kirim teks\n// ============================================\n\nconst http = require('http');\n\nconst EVO_HOST = 'host.docker.internal';\nconst EVO_PORT = 8080;\nconst EVO_API_KEY = 'fa67ff482194dac60c4ffa0733a83d43cc540ce9';\n\nfunction httpReq(path, method, headers, body) {\n  return new Promise((resolve, reject) => {\n    const opts = {\n      hostname: EVO_HOST, port: EVO_PORT,\n      path: path, method: method || 'GET',\n      headers: headers || {}\n    };\n    const req = http.request(opts, res => {\n      let data = '';\n      res.on('data', c => data += c);\n      res.on('end', () => {\n        let json;\n        try { json = JSON.parse(data); } catch (e) { json = {}; }\n        resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, statusCode: res.statusCode, statusText: res.statusMessage, data: json });\n      });\n    });\n    req.on('error', reject);\n    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));\n    req.end();\n  });\n}\n\nconst data = $input.first().json;\nconst instanceName = data.instanceUsed;\nconst phone = data.phone;\nconst pdfBase64 = data.pdfBase64;\nconst fileName = data.fileName || 'Invoice.pdf';\n\ntry {\n  const res = await httpReq(\n    '/message/sendMedia/' + instanceName,\n    'POST',\n    { 'Content-Type': 'application/json', 'apikey': EVO_API_KEY },\n    JSON.stringify({ number: phone, mediatype: 'document', media: pdfBase64, fileName: fileName })\n  );\n\n  if (res.ok && !res.data.error) {\n    return [{ json: {\n      success: true,\n      message: 'WhatsApp terkirim dengan PDF',\n      instanceUsed: instanceName,\n      connectedInstances: data.connectedInstances,\n      totalInstances: data.totalInstances\n    }}];\n  } else {\n    return [{ json: {\n      success: true,\n      message: 'Teks terkirim, PDF gagal: ' + (res.data.error || res.statusText),\n      instanceUsed: instanceName,\n      connectedInstances: data.connectedInstances,\n      totalInstances: data.totalInstances\n    }}];\n  }\n} catch (err) {\n  return [{ json: {\n    success: true,\n    message: 'Teks terkirim, PDF error: ' + String(err.message || err),\n    instanceUsed: instanceName,\n    connectedInstances: data.connectedInstances,\n    totalInstances: data.totalInstances\n  }}];\n}"
       },
       "id": "send-pdf",
-      "name": "Send PDF Document",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [950, 200],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "",
-          "name": "Evolution API Key"
-        }
-      }
+      "name": "Kirim PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 100]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, message: 'WhatsApp sent with PDF' }) }}",
-        "options": {
-          "responseCode": 200
-        }
+        "responseBody": "={{ JSON.stringify({ success: true, message: $json.message || 'WhatsApp terkirim dengan PDF', instanceUsed: $json.instanceUsed, connectedInstances: $json.connectedInstances, totalInstances: $json.totalInstances }) }}",
+        "options": { "responseCode": 200 }
       },
       "id": "response-with-pdf",
-      "name": "Response (with PDF)",
+      "name": "Response (PDF)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1200, 200]
+      "position": [1450, 100]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, message: 'WhatsApp text sent' }) }}",
-        "options": {
-          "responseCode": 200
-        }
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'WhatsApp teks terkirim', instanceUsed: $json.instanceUsed, connectedInstances: $json.connectedInstances, totalInstances: $json.totalInstances }) }}",
+        "options": { "responseCode": 200 }
       },
       "id": "response-text-only",
-      "name": "Response (text only)",
+      "name": "Response (Teks)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json.error || 'Pengiriman gagal', instanceUsed: $json.instanceUsed, connectedInstances: $json.connectedInstances || [], totalInstances: $json.totalInstances || 0, attempts: $json.attempts || [] }) }}",
+        "options": { "responseCode": 500 }
+      },
+      "id": "response-error",
+      "name": "Response (Error)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [950, 450]
     }
   ],
   "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Send Text Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Text Message": {
-      "main": [
-        [
-          {
-            "node": "Has PDF?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Has PDF?": {
-      "main": [
-        [
-          {
-            "node": "Send PDF Document",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Response (text only)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send PDF Document": {
-      "main": [
-        [
-          {
-            "node": "Response (with PDF)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Webhook": { "main": [[{ "node": "Rotate & Send Text", "type": "main", "index": 0 }]] },
+    "Rotate & Send Text": { "main": [[{ "node": "Berhasil?", "type": "main", "index": 0 }]] },
+    "Berhasil?": { "main": [[{ "node": "Ada PDF?", "type": "main", "index": 0 }], [{ "node": "Response (Error)", "type": "main", "index": 0 }]] },
+    "Ada PDF?": { "main": [[{ "node": "Kirim PDF", "type": "main", "index": 0 }], [{ "node": "Response (Teks)", "type": "main", "index": 0 }]] },
+    "Kirim PDF": { "main": [[{ "node": "Response (PDF)", "type": "main", "index": 0 }]] }
   },
-  "settings": {
-    "executionOrder": "v1",
-    "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": ""
-  },
-  "tags": [
-    {
-      "name": "WhatsApp",
-      "id": "wa-tag"
-    }
-  ]
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "callerPolicy": "workflowsFromSameOwner", "errorWorkflow": "" },
+  "tags": [{ "name": "WhatsApp", "id": "wa-tag" }, { "name": "Rotating", "id": "rotating-tag" }]
 }

@@ -98,10 +98,13 @@ export default function ShareInvoiceModal({ booking, invoiceRef, onClose }: Prop
         const name = booking.invoice.invoiceNumber?.replace(/[/\\]/g, '_') || booking.id.slice(0, 8);
         const { blob, fileName } = await generatePDFBlob(invoiceRef.current, `Invoice_${name}`);
 
-        // Send via n8n webhook (auto — no manual step)
+        // Send via n8n webhook (auto — rotating sender)
         const res = await sendWhatsAppAuto(booking, targetPhone, blob, fileName);
         if (res.success) {
-          setResult({ type: 'success', msg: `WhatsApp berhasil dikirim ke ${targetPhone}` });
+          const instanceInfo = res.instanceUsed
+            ? ` via ${res.instanceUsed}` + (res.totalInstances && res.totalInstances > 1 ? ` (${res.totalInstances} instance aktif)` : '')
+            : '';
+          setResult({ type: 'success', msg: `WhatsApp berhasil dikirim ke ${targetPhone}${instanceInfo}` });
         } else {
           setResult({ type: 'error', msg: res.error || 'Gagal mengirim WhatsApp' });
         }

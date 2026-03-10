@@ -83,14 +83,15 @@ export async function sendInvoiceEmail(
 
 /**
  * Send invoice via WhatsApp automatically (calls n8n webhook on VPS).
- * Sends text message + PDF document.
+ * Sends text message + PDF document via rotating instance pool.
+ * n8n auto-discovers connected instances and round-robin rotates.
  */
 export async function sendWhatsAppAuto(
   booking: Booking,
   phone: string,
   pdfBlob?: Blob,
   pdfFileName?: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; instanceUsed?: string; totalInstances?: number }> {
   if (!WHATSAPP_API_URL) {
     return { success: false, error: 'WhatsApp API belum dikonfigurasi (VITE_WHATSAPP_API_URL)' };
   }
@@ -121,9 +122,18 @@ export async function sendWhatsAppAuto(
 
     const data = await res.json();
     if (!res.ok || !data.success) {
-      return { success: false, error: data.error || 'Gagal mengirim WhatsApp' };
+      return {
+        success: false,
+        error: data.error || 'Gagal mengirim WhatsApp',
+        instanceUsed: data.instanceUsed || undefined,
+        totalInstances: data.totalInstances || 0,
+      };
     }
-    return { success: true };
+    return {
+      success: true,
+      instanceUsed: data.instanceUsed || undefined,
+      totalInstances: data.totalInstances || 0,
+    };
   } catch (err) {
     return { success: false, error: (err as Error).message };
   }

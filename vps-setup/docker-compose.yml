@@ -97,8 +97,8 @@ services:
       # WhatsApp Web version — WAJIB di-set jika VPS blokir WhatsApp
       # Karena fetchLatestWaWebVersion() tidak bisa fetch web.whatsapp.com/sw.js
       # Cek versi terbaru: curl -s --proxy socks5h://127.0.0.1:40000 https://web.whatsapp.com/sw.js | grep -oP 'client_revision":\K[0-9]+'
-      WEB_VERSION: "2.3000.1034302344"
-      CONFIG_SESSION_PHONE_VERSION: "2.3000.1034302344"
+      WEB_VERSION: "2.3000.1034756368"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1034756368"
       CONFIG_SESSION_PHONE_CLIENT: "Evolution API"
       CONFIG_SESSION_PHONE_NAME: "Chrome"
 
@@ -107,6 +107,7 @@ services:
     volumes:
       - evolution_data:/evolution/instances
       - evolution_media:/evolution/media
+      - ./baileys-version.json:/evolution/node_modules/baileys/lib/Defaults/baileys-version.json:ro
 
   # ---------- n8n (Workflow Automation) ----------
   n8n:
@@ -118,8 +119,8 @@ services:
         condition: service_healthy
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    expose:
-      - "5678"
+    ports:
+      - "127.0.0.1:5678:5678"
     environment:
       # Evolution API (host network, reachable via host.docker.internal)
       EVOLUTION_API_URL: http://host.docker.internal:8080
@@ -139,6 +140,11 @@ services:
       N8N_PROTOCOL: https
       WEBHOOK_URL: ${N8N_WEBHOOK_URL:-https://n8n.gtmgroup.co.id}
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-https://n8n.gtmgroup.co.id}
+
+      # Enable axios & built-in modules in Code nodes
+      # Diperlukan untuk rotating sender (Code node axios → Evolution API)
+      NODE_FUNCTION_ALLOW_BUILTIN: "*"
+      NODE_FUNCTION_ALLOW_EXTERNAL: "axios"
 
       # Security
       N8N_BASIC_AUTH_ACTIVE: "true"

@@ -100,26 +100,37 @@ Two channels: **Email** (with PDF attachment) and **WhatsApp** (text + PDF auto-
 ### WhatsApp VPS Infrastructure (`vps-setup/`)
 Separate VPS running Docker with Evolution API (WhatsApp gateway) + n8n (workflow automation) + Nginx (reverse proxy + SSL) + Cloudflare WARP (proxy for WhatsApp connectivity). Full documentation in `vps-setup/README.md`.
 
-**Architecture**: Invoice App → POST n8n webhook → n8n sends text + PDF via Evolution API → WhatsApp
+**Architecture**: Invoice App → POST n8n webhook → n8n **auto-discovers** connected instances → **round-robin selects** one → sends text + PDF → **failover** to next instance on error
+
+**Rotating Sender System**:
+- n8n Code node fetches ALL Evolution API instances on every request (`/instance/fetchInstances`)
+- Filters only connected instances (`status === 'open'`)
+- Round-robin rotation via `$getWorkflowStaticData('global')` (persists index across executions)
+- If sending fails on selected instance → automatically tries next instance in pool (failover loop)
+- New instances added to Evolution API are auto-discovered — no workflow changes needed
+- Response includes `instanceUsed`, `connectedInstances[]`, `totalInstances`, `attempts[]`
 
 **Key components**:
 - `docker-compose.yml` — 5 services: postgres, redis, evolution-api (custom build with proxychains), n8n, nginx + certbot
 - `evolution-proxy/` — Custom Docker image: Evolution API v2.2.3 + proxychains-ng (routes ALL traffic including WebSocket keep-alive via WARP SOCKS5)
 - `nginx/` — HTTP-only initial config + SSL configs in `sites-ssl/` (auto-switched by setup.sh after certbot)
-- `n8n-workflow.json` — Importable workflow: Webhook → Send Text → Has PDF? → Send PDF → Response
+- `n8n-workflow.json` — Importable workflow: Webhook → Rotate & Send Text (Code) → Berhasil? → Ada PDF? → Kirim PDF (Code) → Response
+- `n8n-autoreply-workflow.json` — Auto-reply bot: Webhook (Evolution event) → Code (skip self/group, reply with bot message)
 - `setup.sh` — Full auto-setup: generate .env, DNS check, firewall, Docker start, SSL, cron
-- `connect-whatsapp.sh` — Create instance + generate QR code for scanning
-- `test-send.sh` — End-to-end test via n8n webhook
+- `connect-whatsapp.sh [name]` — Create instance + generate QR code + register auto-reply webhook. Accepts custom name (default: `invoice-sender-1`). Each instance = 1 WhatsApp number
+- `manage-instances.sh` — View all instances, restart/logout/delete. Shows rotation pool status
+- `test-send.sh` — End-to-end test via n8n webhook — shows which instance was used + rotation info
 - `setup-ssl.sh` — Retry SSL if it failed during initial setup
 - `cleanup.sh` — Full teardown (removes all data + volumes)
 
 **Critical notes**:
 - Evolution API uses `network_mode: host` (required for proxychains to reach WARP on 127.0.0.1:40000)
 - n8n and nginx use `extra_hosts: host.docker.internal:host-gateway` to reach Evolution API on host
+- n8n requires `NODE_FUNCTION_ALLOW_BUILTIN: "*"` env var — enables `fetch()` in Code nodes for rotation logic
 - `WEB_VERSION` env var is **mandatory** when VPS can't directly fetch `web.whatsapp.com/sw.js` — must match latest WhatsApp Web client revision
-- n8n workflow uses **hardcoded URLs** (not $env) because n8n blocks `$env` access in expressions
+- n8n Code nodes use **hardcoded** `EVO_URL` and `EVO_API_KEY` — user must update `GANTI_DENGAN_EVOLUTION_API_KEY` in both Code nodes after importing workflow
 - PDF sent as **raw base64** (no `data:` prefix) — Evolution API rejects the prefix
-- Deploy to VPS: `rsync -avz --delete --exclude='.env' --exclude='nginx/conf.d/default.conf' -e "ssh -p <PORT>" vps-setup/ root@<VPS_IP>:~/whatsapp-automation/`
+- Deploy to VPS: `rsync -avz --delete --exclude='.env' --exclude='nginx/conf.d/default.conf' --exclude='qr-code-*.png' -e "ssh -p <PORT>" vps-setup/ root@<VPS_IP>:~/whatsapp-automation/`
 
 ## Database Schema
 
